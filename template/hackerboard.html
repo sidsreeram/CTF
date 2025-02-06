@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Amrita CTF</title>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <link rel="stylesheet" href="css/bootstrap4-neon-glow.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.020/css/hack.min.css">
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- Updated Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+</head>
+
+<body class="imgloaded">
+    <div class="navbar-dark text-white">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-dark">
+                <a href="index.html" class="text-decoration-none text-light">
+                    <h3 class="bold"><span class="color_danger">Amrita</span><span class="color_white">CTF</span></h3>
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <div class="navbar-nav ml-auto">
+                        <a href="/" class="p-3 text-light bold">Home</a>
+                        <a href="/about" class="p-3 text-light bold">About</a>
+                        <a href="/hackerboard" class="p-3 text-white bold">Hackerboard</a>
+                        <a href="/login" class="p-3 text-light bold">Login</a>
+                        <a href="/register" class="p-3 text-light bold">Register</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <div class="jumbotron bg-transparent pt-3">
+        <div class="container">
+            <h1 class="display-1 bold text-center"><span class="color_danger">HACKER</span>BOARD</h1>
+            <p class="text-grey lead text-center">Where the world gets ranked!</p>
+
+            <!-- Chart Container -->
+            <div class="row justify-content-center my-5">
+                <div class="col-xl-10">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Scoreboard Table -->
+            <div class="row mt-5 justify-content-center">
+                <div class="col-xl-10">
+                    <table class="table table-hover table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Team Name</th>
+                                <th># Challenges Solved</th>
+                                <th>Total Time Taken</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoreTableBody">
+                            {{ range $index, $score := .Scores }}
+                            <tr>
+                                <td>{{ add $index 1 }}</td>
+                                <td>{{ .TeamName }}</td>
+                                <td>{{ .ChallengeName }}</td>
+                                <td>{{ .Timestamp }}</td>
+                                <td>{{ .Score }}</td>
+                            </tr>
+                            {{ end }}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+    <script>
+        const socket = io("http://localhost:3000");
+        let scoreChart;
+
+        async function fetchScores() {
+            try {
+                const response = await fetch("http://localhost:3000/scores");
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const scores = await response.json();
+                console.log("Fetched Scores:", scores);
+
+                updateTable(scores);
+                updateGraph(scores);
+            } catch (error) {
+                console.error("Error fetching scores:", error);
+            }
+        }
+
+        function updateTable(data) {
+            let tableBody = document.getElementById("scoreTableBody");
+            tableBody.innerHTML = "";
+
+            let teamStats = {};
+
+            // Calculate team statistics
+            data.forEach(entry => {
+                if (!teamStats[entry.team_name]) {
+                    teamStats[entry.team_name] = { challenges_solved: 0, total_time: 0, total_score: 0 };
+                }
+                teamStats[entry.team_name].challenges_solved++;
+                teamStats[entry.team_name].total_time += 10; // Assuming 10 seconds per challenge (replace with actual time if available)
+                teamStats[entry.team_name].total_score += entry.score;
+            });
+
+            // Sort teams by total score
+            let sortedTeams = Object.entries(teamStats)
+                .sort((a, b) => b[1].total_score - a[1].total_score)
+                .map(([team, stats], index) => `
+                    <tr>
+                        <th scope="row">${index + 1}</th>
+                        <td>${team}</td>
+                        <td>${stats.challenges_solved}</td>
+                        <td>${stats.total_time} sec</td>
+                        <td>${stats.total_score}</td>
+                    </tr>
+                `);
+
+            tableBody.innerHTML = sortedTeams.join("");
+        }
+
+        function updateGraph(data) {
+            let teams = {};
+
+            // Organize data for the chart
+            data.forEach(entry => {
+                if (!teams[entry.team_name]) {
+                    teams[entry.team_name] = { labels: [], scores: [], totalScore: 0 };
+                }
+                teams[entry.team_name].labels.push(new Date(entry.timestamp).toLocaleTimeString());
+                teams[entry.team_name].totalScore += entry.score;
+                teams[entry.team_name].scores.push(teams[entry.team_name].totalScore);
+            });
+
+            // Create datasets for the chart
+            let datasets = Object.keys(teams).map(teamName => ({
+                label: teamName,
+                data: teams[teamName].scores,
+                borderColor: getRandomColor(),
+                fill: false,
+                tension: 0.2
+            }));
+
+            let ctx = document.getElementById("scoreChart").getContext("2d");
+
+            // Destroy existing chart if it exists
+            if (scoreChart) scoreChart.destroy();
+
+            // Create new chart
+            scoreChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: Object.values(teams)[0]?.labels || [],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: "Score" } },
+                        x: { title: { display: true, text: "Time" } }
+                    }
+                }
+            });
+        }
+
+        function getRandomColor() {
+            const colors = [
+                "rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)",
+                "rgba(255, 206, 86, 1)", "rgba(75, 192, 192, 1)",
+                "rgba(153, 102, 255, 1)"
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Fetch scores on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchScores();
+            socket.on("scoreUpdated", fetchScores);
+        });
+    </script>
+</body>
+</html>

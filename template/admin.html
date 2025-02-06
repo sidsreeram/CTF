@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Amrita CTF</title>
+    <link rel="stylesheet" href="css/bootstrap4-neon-glow.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center text-white">Admin Dashboard</h2>
+
+        <!-- Timer Display -->
+        <div class="text-center my-4">
+            <h3 style="color:rgb(139, 17, 84)">Countdown Timer</h3>
+            <div id="MyClockDisplay" class="display-4" style="color: rgb(219, 25, 25);"></div>
+        </div>
+
+        <!-- Freeze Timer & Start Timer Buttons -->
+        <div class="mt-4 text-center">
+            <button onclick="freezeTimer()" class="btn btn-danger">Freeze Timer</button>
+            <button onclick="startTimer()" class="btn btn-success">Start Timer</button>
+        </div>
+
+        <!-- Questions and Flags -->
+        <h3 class="text-white mt-4">Challenges and Flags</h3>
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th>Challenge</th>
+                    <th>Flag</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody id="questionsTable">
+                <tr>
+                    <td colspan="3" class="text-center">Loading Challenges...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Submit Flag -->
+        <h3 class="text-white mt-5">Submit CTF Flag</h3>
+        <div class="form-group">
+            <label for="challengeSelect" class="text-white">Select Challenge</label>
+            <select id="ChallengeSelect" class="form-control">
+                <option value="">Loading Challenges...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="flag" class="text-white">Flag</label>
+            <input type="text" id="flag" class="form-control">
+        </div>
+        <button onclick="submitFlag()" class="btn btn-success">Submit Flag</button>
+
+        <!-- Team Management -->
+        <h3 class="text-white mt-5">Team Management</h3>
+        <ul id="teamList" class="list-group">
+            <li class="list-group-item text-white bg-dark">Loading teams...</li>
+        </ul>
+
+        <!-- User Management -->
+        <h3 class="text-white mt-5">User Management</h3>
+        <ul id="userList" class="list-group">
+            <li class="list-group-item text-white bg-dark">Loading users...</li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:3000");
+
+        async function loadChallenges() {
+            try {
+                const response = await fetch("http://localhost:3000/challenges");
+                const Challenges = await response.json();
+
+                const ChallengesTable = document.getElementById("ChallengesTable");
+                const ChallengeSelect = document.getElementById("ChallengeSelect");
+
+                ChallengesTable.innerHTML = "";
+                ChallengeSelect.innerHTML = '<option value="">Select a challenge</option>';
+
+                Challenges.forEach(q => {
+                    ChallengesTable.innerHTML += `
+                        <tr>
+                            <td>${q.challenge}</td>
+                            <td>${q.flag}</td>
+                            <td>${q.points}</td>
+                        </tr>`;
+                        ChallengeSelect.innerHTML += `<option value="${q.id}">${q.Challenge}</option>`;
+                });
+            } catch (error) {
+                console.error("Error loading Challenges:", error);
+            }
+        }
+
+        // Submit Flag
+        async function submitFlag() {
+            const ChallengeId = document.getElementById("ChallengeSelect").value;
+            const flag = document.getElementById("flag").value.trim();
+
+            if (!ChallengeId || flag === "") {
+                alert("Please select a Challenge and enter a flag.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/submit-flag", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ flag })
+                });
+
+                const result = await response.json();
+                if (result.error) {
+                    alert(result.error);
+                } else {
+                    alert(`Flag validated successfully! Points awarded: ${result.points}`);
+                }
+            } catch (error) {
+                console.error("Error submitting flag:", error);
+                alert("Failed to submit flag. Please try again.");
+            }
+        }
+
+        // Load Teams and Users (existing functions)
+        async function loadTeams() { /* ... */ }
+        async function loadUsers() { /* ... */ }
+
+        window.onload = () => {
+            loadChallenges();
+            loadTeams();
+            loadUsers();
+        };
+    </script>
+</body>
+</html>
