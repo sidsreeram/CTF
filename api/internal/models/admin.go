@@ -3,6 +3,12 @@ package models
 import "time"
 
 
+
+type Flag struct {
+	ID    uint   `gorm:"primaryKey"`
+	Flag  string
+}
+
 type Timer struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	Status    string    `gorm:"not null" json:"status"` // "running" or "frozen"
