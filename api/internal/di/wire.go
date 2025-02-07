@@ -19,6 +19,9 @@ func InitializeServer1() *server.Server {
 		repository.NewTeamRepository,
 		usecase.NewTeamUsecase,
 		handlers.NewTeamHandler,
+		handlers.NewChallengeHandler,
+		usecase.NewChallengeUseCase,
+		repository.NewChallengeRepository,
 		server.NewServer,
 	)
 	return &server.Server{}

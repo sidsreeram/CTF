@@ -38,33 +38,26 @@ func (h *Handlers) GetChallenges(c *gin.Context) {
 }
 
 func (h *Handlers) GetScores(c *gin.Context) {
-	scores, err := h.uc.GetScores() // Removed context parameter
+	teamscore, err := h.uc.GetScores() // Removed context parameter
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
-
 	funcMap := template.FuncMap{
 		"add": func(a, b int) int { return a + b },
 	}
-
-	log.Println("Loading template...")
 	tmpl, err := template.New("hackerboard.html").Funcs(funcMap).ParseFiles("../../../template/hackerboard.html")
 	if err != nil {
 		log.Println("Error loading template:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading template"})
 		return
 	}
-	log.Println("Template loaded successfully")
-
-	log.Println("Executing template...")
-	err = tmpl.Execute(c.Writer, gin.H{"Scores": scores})
+	err = tmpl.Execute(c.Writer, gin.H{"Scores": teamscore})
 	if err != nil {
 		log.Println("Error executing template:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing template"})
 		return
 	}
-	log.Println("Template executed successfully")
 }
 
 var upgrader = websocket.Upgrader{

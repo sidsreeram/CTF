@@ -24,6 +24,9 @@ func InitializeServer() *server.Server {
 	teamRepository := repository.NewTeamRepository(db)
 	teamUsecase := usecase.NewTeamUsecase(teamRepository)
 	teamHandler := handlers.NewTeamHandler(teamUsecase)
-	serverServer := server.NewServer(handlersHandlers, teamHandler)
+	challengeRepository := repository.NewChallengeRepository(db)
+	challengeUseCase := usecase.NewChallengeUseCase(challengeRepository)
+	challengeHandler := handlers.NewChallengeHandler(challengeUseCase)
+	serverServer := server.NewServer(handlersHandlers, teamHandler, challengeHandler)
 	return serverServer
 }

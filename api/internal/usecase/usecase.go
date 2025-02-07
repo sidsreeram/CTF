@@ -21,7 +21,7 @@ func (u *Usecase) GetChallenges() ([]models.Challenge, error) {
 	return u.repo.GetChallenges()
 }
 
-func (u *Usecase) GetScores() ([]models.Score, error) {
+func (u *Usecase) GetScores() ([]models.Team, error) {
 	return u.repo.GetScores()
 }
 

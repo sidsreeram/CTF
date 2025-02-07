@@ -17,7 +17,10 @@ func InitDB() *gorm.DB {
 	}
 
 	// AutoMigrate will create the teams table if it doesn’t exist
-	err = db.AutoMigrate(&models.Team{})
+	err = db.AutoMigrate(
+		&models.Team{},
+	    &models.Challenge{},
+       )
 	if err != nil {
 		log.Fatalf("❌ AutoMigration failed: %v", err)
 	}

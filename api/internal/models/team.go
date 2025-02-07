@@ -3,11 +3,13 @@ package models
 import "golang.org/x/crypto/bcrypt"
 
 type Team struct {
-	ID           uint   `gorm:"primaryKey"`
-	Name     string `gorm:"unique;not null"`
+	ID           int    `gorm:"primaryKey"`
+	Name         string `gorm:"unique;not null"`
 	PasswordHash string `gorm:"not null"`
+	Score        int    `gorm:"not null;default:0;check:score >= 0"`
 	IsBlocked    bool   `gorm:"default:false"`
 }
+
 
 // HashPassword hashes the given password
 func HashPassword(password string) (string, error) {
@@ -22,5 +24,3 @@ func HashPassword(password string) (string, error) {
 func CheckPassword(hashedPassword, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
 }
-
-

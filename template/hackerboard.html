@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.020/css/hack.min.css">
     <link rel="stylesheet" href="css/main.css">
 
-    <!-- Updated Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
 </head>
 
@@ -58,8 +57,6 @@
                             <tr>
                                 <th>#</th>
                                 <th>Team Name</th>
-                                <th># Challenges Solved</th>
-                                <th>Total Time Taken</th>
                                 <th>Score</th>
                             </tr>
                         </thead>
@@ -67,9 +64,7 @@
                             {{ range $index, $score := .Scores }}
                             <tr>
                                 <td>{{ add $index 1 }}</td>
-                                <td>{{ .TeamName }}</td>
-                                <td>{{ .ChallengeName }}</td>
-                                <td>{{ .Timestamp }}</td>
+                                <td>{{ .Name }}</td>
                                 <td>{{ .Score }}</td>
                             </tr>
                             {{ end }}
@@ -93,7 +88,6 @@
                 const response = await fetch("http://localhost:3000/scores");
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const scores = await response.json();
-                console.log("Fetched Scores:", scores);
 
                 updateTable(scores);
                 updateGraph(scores);
@@ -104,91 +98,45 @@
 
         function updateTable(data) {
             let tableBody = document.getElementById("scoreTableBody");
-            tableBody.innerHTML = "";
-
-            let teamStats = {};
-
-            // Calculate team statistics
-            data.forEach(entry => {
-                if (!teamStats[entry.team_name]) {
-                    teamStats[entry.team_name] = { challenges_solved: 0, total_time: 0, total_score: 0 };
-                }
-                teamStats[entry.team_name].challenges_solved++;
-                teamStats[entry.team_name].total_time += 10; // Assuming 10 seconds per challenge (replace with actual time if available)
-                teamStats[entry.team_name].total_score += entry.score;
-            });
-
-            // Sort teams by total score
-            let sortedTeams = Object.entries(teamStats)
-                .sort((a, b) => b[1].total_score - a[1].total_score)
-                .map(([team, stats], index) => `
-                    <tr>
-                        <th scope="row">${index + 1}</th>
-                        <td>${team}</td>
-                        <td>${stats.challenges_solved}</td>
-                        <td>${stats.total_time} sec</td>
-                        <td>${stats.total_score}</td>
-                    </tr>
-                `);
-
-            tableBody.innerHTML = sortedTeams.join("");
+            tableBody.innerHTML = data.map((entry, index) => `
+                <tr>
+                    <th scope="row">${index + 1}</th>
+                    <td>${entry.team_name}</td>
+                    <td>${entry.score}</td>
+                </tr>
+            `).join("");
         }
 
         function updateGraph(data) {
-            let teams = {};
-
-            // Organize data for the chart
-            data.forEach(entry => {
-                if (!teams[entry.team_name]) {
-                    teams[entry.team_name] = { labels: [], scores: [], totalScore: 0 };
-                }
-                teams[entry.team_name].labels.push(new Date(entry.timestamp).toLocaleTimeString());
-                teams[entry.team_name].totalScore += entry.score;
-                teams[entry.team_name].scores.push(teams[entry.team_name].totalScore);
-            });
-
-            // Create datasets for the chart
-            let datasets = Object.keys(teams).map(teamName => ({
-                label: teamName,
-                data: teams[teamName].scores,
-                borderColor: getRandomColor(),
-                fill: false,
-                tension: 0.2
-            }));
+            let labels = data.map(entry => entry.team_name);
+            let scores = data.map(entry => entry.score);
 
             let ctx = document.getElementById("scoreChart").getContext("2d");
 
-            // Destroy existing chart if it exists
             if (scoreChart) scoreChart.destroy();
 
-            // Create new chart
             scoreChart = new Chart(ctx, {
-                type: "line",
+                type: "bar",
                 data: {
-                    labels: Object.values(teams)[0]?.labels || [],
-                    datasets: datasets
+                    labels: labels,
+                    datasets: [{
+                        label: "Score",
+                        data: scores,
+                        backgroundColor: "rgba(75, 192, 192, 0.6)",
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 1
+                    }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: true } },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, title: { display: true, text: "Score" } },
-                        x: { title: { display: true, text: "Time" } }
+                        y: { beginAtZero: true, title: { display: true, text: "Score" } }
                     }
                 }
             });
         }
 
-        function getRandomColor() {
-            const colors = [
-                "rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)",
-                "rgba(255, 206, 86, 1)", "rgba(75, 192, 192, 1)",
-                "rgba(153, 102, 255, 1)"
-            ];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-
-        // Fetch scores on page load
         document.addEventListener("DOMContentLoaded", () => {
             fetchScores();
             socket.on("scoreUpdated", fetchScores);

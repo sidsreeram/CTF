@@ -9,14 +9,20 @@ import (
 )
 
 type Server struct {
-	router       *gin.Engine
-	handlers     *handlers.Handlers
-	teamhandlers *handlers.TeamHandler
+	router            *gin.Engine
+	handlers          *handlers.Handlers
+	teamhandlers      *handlers.TeamHandler
+	challengehandlers *handlers.ChallengeHandler
 }
 
-func NewServer(handlers *handlers.Handlers, teamhandlers *handlers.TeamHandler) *Server {
+func NewServer(handlers *handlers.Handlers, teamhandlers *handlers.TeamHandler, challengehandlers *handlers.ChallengeHandler) *Server {
 	router := gin.Default()
-	server := &Server{router: router, handlers: handlers, teamhandlers: teamhandlers}
+	server := &Server{
+		router:            router,
+		handlers:          handlers,
+		teamhandlers:      teamhandlers,
+		challengehandlers: challengehandlers,
+	}
 	server.setupRoutes()
 	return server
 }
@@ -44,6 +50,8 @@ func (s *Server) setupRoutes() {
 	s.router.LoadHTMLGlob("../../../template/*.html")
 	s.router.Static("/css", "../../../template/css")
 	s.router.Static("/js", "../../../template/js")
+	s.router.Static("/images", "../../../template/images")
+	s.router.Static("/fonts", "../../../template/fonts")
 
 	s.router.GET("/register", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "register.html", nil)
@@ -66,7 +74,9 @@ func (s *Server) setupRoutes() {
 	s.router.GET("/about", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "about.html", nil)
 	})
-	// Define routes
+	s.router.GET("/admin",func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK,"admin.html",nil)
+	})
 	s.router.GET("/teams", s.handlers.GetTeams)
 	s.router.GET("/challenges", s.handlers.GetChallenges)
 	s.router.GET("/hackerboard", s.handlers.GetScores)
@@ -75,6 +85,10 @@ func (s *Server) setupRoutes() {
 	// Team authentication routes
 	s.router.POST("/register", s.teamhandlers.RegisterTeam)
 	s.router.POST("/login", s.teamhandlers.LoginTeam)
+	s.router.POST("/addchallenge", s.challengehandlers.CreateChallenge)
+	s.router.GET("/viewchallenge",s.challengehandlers.GetChallenges)
+	s.router.PUT("/updatechallenge",s.challengehandlers.UpdateChallenge)
+	s.router.DELETE("/deletechallenge/:id", s.challengehandlers.DeleteChallenge)
 }
 
 func (s *Server) Run(addr string) error {

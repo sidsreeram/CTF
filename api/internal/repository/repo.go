@@ -31,13 +31,14 @@ func (r *Repository) GetChallenges() ([]models.Challenge, error) {
 }
 
 // GetScores - Fetch all scores from DB
-func (r *Repository) GetScores() ([]models.Score, error) {
-	var scores []models.Score
-	if err := r.db.Order("timestamp ASC").Find(&scores).Error; err != nil {
+func (r *Repository) GetScores() ([]models.Team, error) {
+	var teams []models.Team
+	if err := r.db.Select("name, score").Order("score DESC").Find(&teams).Error; err != nil {
 		return nil, err
 	}
-	return scores, nil
+	return teams, nil
 }
+
 
 // UpdateScore - Update a team's score in DB
 func (r *Repository) UpdateScore(teamName, challengeName string, score int) error {
@@ -72,18 +73,6 @@ func (r *Repository) UpdateScore(teamName, challengeName string, score int) erro
 	return nil
 }
 
-// BlockTeam - Marks a team as blocked
-func (r *Repository) BlockTeam(teamName string) error {
-	return r.db.Model(&models.Team{}).
-		Where("team_name = ?", teamName).
-		Update("is_blocked", true).Error
-}
-
-// SubmitFlag - Saves a submitted flag (independent of teams)
-func (r *Repository) SubmitFlag(flag string) error {
-	newFlag := models.Flag{Flag: flag}
-	return r.db.Create(&newFlag).Error
-}
 
 // UpdateTimerStatus - Updates the CTF timer status
 func (r *Repository) UpdateTimerStatus(status string) error {
