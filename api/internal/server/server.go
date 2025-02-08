@@ -2,9 +2,11 @@ package server
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/ctf-api/internal/handlers"
+	"github.com/ctf-api/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,10 +30,11 @@ func NewServer(handlers *handlers.Handlers, teamhandlers *handlers.TeamHandler, 
 }
 
 func (s *Server) setupRoutes() {
+	// CORS middleware
 	s.router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5500")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -40,7 +43,7 @@ func (s *Server) setupRoutes() {
 		c.Next()
 	})
 
-	// Add custom template functions
+	// Custom template functions
 	funcMap := template.FuncMap{
 		"add": func(a, b int) int { return a + b },
 	}
@@ -52,43 +55,45 @@ func (s *Server) setupRoutes() {
 	s.router.Static("/js", "../../../template/js")
 	s.router.Static("/images", "../../../template/images")
 	s.router.Static("/fonts", "../../../template/fonts")
+	s.router.Static("/admin/css","../../../template/css")
 
-	s.router.GET("/register", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "register.html", nil)
-	})
-	s.router.GET("/", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "index.html", nil)
-	})
-	s.router.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", nil)
-	})
-	s.router.GET("/instructions", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "instructions.html", nil)
-	})
-	// s.router.GET("/hackerboard", func(ctx *gin.Context) {
-	// 	ctx.HTML(http.StatusOK, "hackerboard.html", nil)
-	// })
-	s.router.GET("/quests", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "quests.html", nil)
-	})
-	s.router.GET("/about", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "about.html", nil)
-	})
-	s.router.GET("/admin",func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK,"admin.html",nil)
-	})
-	s.router.GET("/teams", s.handlers.GetTeams)
-	s.router.GET("/challenges", s.handlers.GetChallenges)
-	s.router.GET("/hackerboard", s.handlers.GetScores)
-	s.router.GET("/ws", s.handlers.HandleWebSocket)
+	// 📌 Public Routes (No Authentication Required)
+	s.router.GET("/", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "index.html", nil) })
+	s.router.GET("/register", func(c *gin.Context) { c.HTML(http.StatusOK, "register.html", nil) })
+	s.router.GET("/login", func(c *gin.Context) { c.HTML(http.StatusOK, "login.html", nil) })
+	s.router.GET("/instructions", func(c *gin.Context) { c.HTML(http.StatusOK, "instructions.html", nil) })
+	s.router.GET("/quests", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "quests.html", nil) })
+	s.router.GET("/about", func(c *gin.Context) { c.HTML(http.StatusOK, "about.html", nil) })
 
-	// Team authentication routes
+	// API Endpoints - Public
 	s.router.POST("/register", s.teamhandlers.RegisterTeam)
 	s.router.POST("/login", s.teamhandlers.LoginTeam)
-	s.router.POST("/addchallenge", s.challengehandlers.CreateChallenge)
-	s.router.GET("/viewchallenge",s.challengehandlers.GetChallenges)
-	s.router.PUT("/updatechallenge",s.challengehandlers.UpdateChallenge)
-	s.router.DELETE("/deletechallenge/:id", s.challengehandlers.DeleteChallenge)
+	s.router.GET("/hackerboard", s.handlers.GetScores)
+	s.router.GET("/getchallenges", s.challengehandlers.GetChallenges)
+
+
+	// 📌 **Authenticated Team Routes (Requires Login)**
+	teamRoutes := s.router.Group("/team")
+	teamRoutes.Use(middleware.TeamAuth) // Middleware for authentication
+	{
+		teamRoutes.POST("/verifyflag", s.challengehandlers.SubmitFlag)
+		log.Println("server called") // List Challenges
+	}
+
+	// 📌 **Admin Routes (Requires Admin Role)**
+	adminRoutes := s.router.Group("/admin")
+	adminRoutes.Use(middleware.AdminAuth) // Middleware for admin authentication
+	{
+		adminRoutes.GET("/", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "admin.html", nil) })
+		adminRoutes.POST("/addchallenge", s.challengehandlers.CreateChallenge)
+		adminRoutes.GET("/challenges", s.challengehandlers.GetChallenges)
+		adminRoutes.PUT("/updatechallenge/:id", s.challengehandlers.UpdateChallenge)
+		adminRoutes.DELETE("/deletechallenge/:id", s.challengehandlers.DeleteChallenge)
+		adminRoutes.GET("/teams", s.handlers.GetTeams)
+	}
+
+	// 📌 WebSocket (Real-time updates)
+	s.router.GET("/ws", s.handlers.HandleWebSocket)
 }
 
 func (s *Server) Run(addr string) error {

@@ -96,7 +96,7 @@ body {
 }
 
 #main {
-    display: none; /* Initially hidden */
+    display: block;
 }
 
 /* Rest of your existing CSS */
@@ -279,6 +279,10 @@ input[type="radio"].toggle:checked + label {
     left: calc(-1 * var(--gap-horizontal));
     width: calc(100% + var(--gap-horizontal) * 2);
     height: calc(100% + var(--gap-vertical) * 2);
+<<<<<<< HEAD
+=======
+    background: url(../images/bg.png);
+>>>>>>> ea197e3fe1d8fb892663203d834356b2d9f9e26b
     transform: translate3d(0, 0, 0);
     background-image: url(../images/bg.png);
     background-blend-mode: var(--blend-mode-1);
@@ -290,6 +294,31 @@ input[type="radio"].toggle:checked + label {
 .navbar-nav a {
     transition: all 0.3s ease-in-out;
     position: relative;
+<<<<<<< HEAD
+=======
+}
+
+.navbar-nav a:hover {
+    color: #eee6e7 !important; /* Change to a glowing color */
+    text-shadow: 0 0 8px #fa0a0a, 0 0 12px #ff073a;
+}
+
+.navbar-nav a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 2px;
+    background: #ffffff; /* Red neon underline */
+    box-shadow: 0 0 8px #ff073a, 0 0 12px #ff073a;
+    transform: scaleX(0);
+    transition: transform 0.3s ease-in-out;
+}
+
+.navbar-nav a:hover::after {
+    transform: scaleX(1);
+>>>>>>> ea197e3fe1d8fb892663203d834356b2d9f9e26b
 }
 
 .navbar-nav a:hover {

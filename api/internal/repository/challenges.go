@@ -2,10 +2,10 @@ package repository
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/ctf-api/internal/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -51,7 +51,6 @@ func (r *ChallengeRepo) UpdateChallenge(challenge *models.Challenge) error {
 
 // DeleteChallenge - Delete a challenge by its name
 func (r *ChallengeRepo) DeleteChallenge(id int) error {
-	log.Println("reached herrr")
 	return r.db.Where("id = ?", id).Delete(&models.Challenge{}).Error
 }
 
@@ -63,7 +62,9 @@ func (r *ChallengeRepo) GetChallenges() ([]models.Challenge, error) {
 }
 
 // VerifyFlag - Verify the flag submitted by a team and update the team's score
-func (r *ChallengeRepo) VerifyFlag(teamID int, challengeID int, flag string) (bool, error) {
+
+// VerifyFlag checks if the submitted flag is correct and updates scores
+func (r *ChallengeRepo) VerifyFlag(teamID int, challengeID int, submittedFlag string) (bool, error) {
 	var challenge models.Challenge
 	if err := r.db.First(&challenge, challengeID).Error; err != nil {
 		return false, err
@@ -75,9 +76,10 @@ func (r *ChallengeRepo) VerifyFlag(teamID int, challengeID int, flag string) (bo
 		return false, errors.New("team has already solved this challenge")
 	}
 
-	// Verify the flag
-	if flag != challenge.Flag {
-		return false, nil
+	// Verify the flag using bcrypt
+	err := bcrypt.CompareHashAndPassword([]byte(challenge.Flag), []byte(submittedFlag))
+	if err != nil {
+		return false, nil // Incorrect flag
 	}
 
 	// Calculate the score based on the number of solvers
@@ -111,7 +113,7 @@ func (r *ChallengeRepo) VerifyFlag(teamID int, challengeID int, flag string) (bo
 
 	// Record the score for this team and challenge
 	newScore := models.Score{
-		TeamName:      team.Name,
+		TeamName:    team.Name,
 		ChallengeID: challengeID,
 		Score:       score,
 		Timestamp:   time.Now(),

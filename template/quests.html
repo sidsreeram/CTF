@@ -1,96 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Amrita CTF</title>
-
-
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMRITA CTF</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
     <link rel="stylesheet" href="css/bootstrap4-neon-glow.min.css">
-
-
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-    <link rel='stylesheet' href='//cdn.jsdelivr.net/font-hack/2.020/css/hack.min.css'>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
     <link rel="stylesheet" href="css/main.css">
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
 </head>
-
 <body>
     <div class="navbar-dark text-white">
         <div class="container">
             <nav class="navbar px-0 py-0 navbar-expand-lg navbar-dark">
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                    <div class="navbar-nav">
-                        <a href="/" class="pl-md-0 p-3 text-decoration-none text-white">
-                            <h3 class="bold"><span class="color_danger">Amrita</span><span class="color_white">CTF</span></h3>
-                        </a>
-                    </div>
-                    <div class="navbar-nav ml-auto">
-                        <a href="/" class="p-3 text-decoration-none text-white bold">Home</a>
-                        <a href="/about" class="p-3 text-decoration-none text-white bold">About</a>
-                        <a href="/hackerboard" class="p-3 text-decoration-none text-white bold">Hackerboard</a>
-                        <a href="/quests" class="p-3 text-decoration-none text-white bold">Challenges</a>
-                        <a href="/index" class="p-3 text-decoration-none text-white bold">Logout</a>
-                    </div>
+                <a href="/" class="pl-md-0 p-3 text-decoration-none text-light">
+                    <h3 class="bold"><span class="color_danger">Amrita</span><span class="color_white">CTF</span></h3>
+                </a>
+                <div class="navbar-nav ml-auto">
+                    <a href="/" class="p-3 text-decoration-none text-white bold">Home</a>
+                    <a href="/about" class="p-3 text-decoration-none text-white bold">About</a>
+                    <a href="/hackerboard" class="p-3 text-decoration-none text-white bold">Hackerboard</a>
+                    <a href="/quests" class="p-3 text-decoration-none text-white bold">Challenges</a>
+                    <a href="/" class="p-3 text-decoration-none text-white bold">Logout</a>
                 </div>
             </nav>
-
         </div>
     </div>
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-<script>
-    const socket = io("http://localhost:3000"); // Connect to WebSocket server
-
-    let totalSeconds = 2 * 60 * 60; // 2 hours in seconds
-    let timerRunning = true;
-    let timerInterval;
-
-    function updateTimerDisplay() {
-        let h = Math.floor(totalSeconds / 3600);
-        let m = Math.floor((totalSeconds % 3600) / 60);
-        let s = totalSeconds % 60;
-
-        h = (h < 10) ? "0" + h : h;
-        m = (m < 10) ? "0" + m : m;
-        s = (s < 10) ? "0" + s : s;
-
-        document.getElementById("MyClockDisplay").innerText = `${h}:${m}:${s}`;
-    }
-
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            if (timerRunning && totalSeconds > 0) {
-                totalSeconds--;
-                updateTimerDisplay();
-            } else if (totalSeconds === 0) {
-                clearInterval(timerInterval);
-                alert("Time is up!");
-            }
-        }, 1000);
-    }
-
-    // Listen for "freezeTimer" event from the admin page
-    socket.on("freezeTimer", (status) => {
-        timerRunning = status;
-        console.log("Timer " + (status ? "Resumed" : "Frozen"));
-    });
-
-    updateTimerDisplay();
-    startTimer();
-</script>
 
     <div class="jumbotron bg-transparent mb-0 pt-0 radius-0">
         <div class="container">
             <div class="row">
-                <div class="col-xl-12  text-center">
+                <div class="col-xl-12 text-center">
                     <h1 class="display-1 bold color_white content__title">QUESTS<span class="vim-caret">&nbsp;</span></h1>
                     <p class="text-grey text-spacey hackerFont lead mb-5">
                         Its time to show the world what you can do!
@@ -98,126 +38,112 @@
                 </div>
             </div>
             <div class="container" align="center" style="color: rgb(244, 43, 43); font-size: 20px;">
-               <div class="row">
-                 <div class="col-md-12 position-relative">
-            <div id="MyClockDisplay" class="clock-container"></div>
-               </div>
-               </div>
+                <div class="row">
+                    <div class="col-md-12 position-relative">
+                        <div id="MyClockDisplay" class="clock-container"></div>
+                    </div>
+                </div>
             </div>
             <div class="col-md-12">
                 <h4>Challenges</h4>
             </div>
-
             <div class="row" id="challenges-container"></div>
-            
-            
-            <div class="container">
-                <div id="challenges-container"></div>
-            </div>
-            
-            <style>
-                /* Make the card height dynamic */
-                .card {
-                    display: flex;
-                    flex-direction: column;
-                }
-            
-                /* Ensure consistent row structure */
-                .row {
-                    display: flex;
-                    flex-wrap: wrap;
-                }
-            </style>
-            
-            <script>
-                const challenges = [
-                    "Bombs Landed", "Find The Easy Pass", "Impossible Password", 
-                    "Find The Secret Flag", "DSYM", 
-                    "Headache", "Crypto King", 
-                    "Binary Master", "SQL Slayer", "Web Warden"
-                ];
-            
-                const challengeRows = [
-                    { count: 3, colClass: "col-md-4" }, // 3 challenges, each taking 4 columns
-                    { count: 2, colClass: "col-md-6" }, // 2 challenges, each taking 6 columns
-                    { count: 2, colClass: "col-md-6" }, // 2 challenges, each taking 6 columns
-                    { count: 3, colClass: "col-md-4" }  // 3 challenges, each taking 4 columns
-                ];
-                
-                let container = document.getElementById("challenges-container");
-                let challengeIndex = 0;
-                let challengeHtml = "";
-            
-                challengeRows.forEach((row) => {
-                    challengeHtml += `<div class="row w-100">`; // Ensure full row width
-                    for (let i = 0; i < row.count && challengeIndex < challenges.length; i++, challengeIndex++) {
-                        challengeHtml += `
-                        <div class="${row.colClass} mb-3">
-                            <div class="card category_general">
-                                <div class="card-header solved" data-toggle="collapse" data-target="#problem_id_${challengeIndex + 1}" aria-expanded="false">
-                                    ${challenges[challengeIndex]} <span class="badge">80 points</span>
-                                </div>
-                                <div id="problem_id_${challengeIndex + 1}" class="collapse">
-                                    <div class="card-body">
-                                        <blockquote class="card-blockquote">
-                                            <p>Can you find the password? Enter it as: Amrita_CTF{passwordhere}</p>
-                                            <a target="_blank" href="#!" class="btn btn-outline-secondary btn-shadow">
-                                                <span class="fa fa-download mr-2"></span>Download
-                                            </a>
-                                            <a href="#hint" data-toggle="modal" data-target="#hint" class="btn btn-outline-secondary btn-shadow">
-                                                <span class="far fa-whitebulb mr-2"></span>Hint
-                                            </a>
-                                            <div class="input-group mt-3">
-                                                <input type="text" class="form-control" placeholder="Enter Flag">
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-secondary" type="button">Go!</button>
-                                                </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch challenges from the backend API
+        async function fetchChallenges() {
+            try {
+                const response = await fetch("/getchallenges");
+                const challenges = await response.json();
+                renderChallenges(challenges);
+            } catch (error) {
+                console.error("Error fetching challenges:", error);
+            }
+        }
+
+        // Render challenges as cards
+        function renderChallenges(challenges) {
+            const container = document.getElementById("challenges-container");
+            let challengeHtml = "";
+
+            challenges.forEach((challenge, index) => {
+                challengeHtml += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card category_general">
+                            <div class="card-header solved" data-toggle="collapse" data-target="#problem_id_${index + 1}" aria-expanded="false">
+                                ${challenge.name} <span class="badge">80 points</span>
+                            </div>
+                            <div id="problem_id_${index + 1}" class="collapse">
+                                <div class="card-body">
+                                    <blockquote class="card-blockquote">
+                                        <p>${challenge.description}</p>
+                                        <a target="_blank" href="${challenge.download_link}" class="btn btn-outline-secondary btn-shadow">
+                                            <span class="fa fa-download mr-2"></span>Download
+                                        </a>
+                                        <a href="#hint" data-toggle="modal" data-target="#hint" class="btn btn-outline-secondary btn-shadow">
+                                            <span class="far fa-whitebulb mr-2"></span>Hint: ${challenge.hint}
+                                        </a>
+                                        <div class="input-group mt-3">
+                                            <input type="text" class="form-control" id="flag-input-${challenge.id}" placeholder="Enter Flag">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="verifyFlag(${challenge.id})">Go!</button>
                                             </div>
-                                        </blockquote>
-                                    </div>
+                                        </div>
+                                        <div id="flag-result-${challenge.id}" class="mt-2"></div>
+                                    </blockquote>
                                 </div>
                             </div>
-                        </div>`;
-                    }
-                    challengeHtml += `</div>`; // Close the row
-                });
-            
-                container.innerHTML = challengeHtml;
-                function showTime(){
-    var date = new Date();
-    var h = date.getHours(); // 0 - 23
-    var m = date.getMinutes(); // 0 - 59
-    var s = date.getSeconds(); // 0 - 59
-    var session = "AM";
-    
-    if(h == 0){
-        h = 12;
+                        </div>
+                    </div>`;
+            });
+
+            container.innerHTML = challengeHtml;
+        }
+
+        // Verify the flag
+        async function verifyFlag(challengeId) {
+               const flagInput = document.getElementById(`flag-input-${challengeId}`);
+               const flagResult = document.getElementById(`flag-result-${challengeId}`);
+            const flag = flagInput.value.trim();
+
+    if (!flag) {
+        flagResult.innerHTML = `<div class="alert alert-warning">Please enter a flag.</div>`;
+        return;
     }
-    
-    if(h > 12){
-        h = h - 12;
-        session = "PM";
+
+    try {
+        const response = await fetch(window.location.origin + "/team/verifyflag",  {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                challenge_id: challengeId,
+                submitted_flag: flag, // Change 'flag' to 'submitted_flag'
+            }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            flagResult.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+        } else {
+            flagResult.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+        }
+    } catch (error) {
+        console.error("Error verifying flag:", error);
+        flagResult.innerHTML = `<div class="alert alert-danger">An error occurred. Please try again.</div>`;
     }
-    
-    h = (h < 10) ? "0" + h : h;
-    m = (m < 10) ? "0" + m : m;
-    s = (s < 10) ? "0" + s : s;
-    
-    var time = h + ":" + m + ":" + s + " " + session;
-    document.getElementById("MyClockDisplay").innerText = time;
-    document.getElementById("MyClockDisplay").textContent = time;
-    
-    setTimeout(showTime, 1000);
-    
 }
 
-showTime();
-            </script>
+        // Fetch and render challenges on page load
+        fetchChallenges();
+    </script>
 
-        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
-
 </html>

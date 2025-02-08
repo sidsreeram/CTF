@@ -60,33 +60,46 @@ func (h *ChallengeHandler) CreateChallenge(c *gin.Context) {
 
 // SubmitFlagRequest defines the structure for flag submission
 type SubmitFlagRequest struct {
-	TeamID        int    `json:"team_id" binding:"required"`
-	ChallengeID   int    `json:"challenge_id" binding:"required"`
-	SubmittedFlag string `json:"submitted_flag" binding:"required"`
+    ChallengeID   int    `json:"challenge_id" binding:"required"`
+    SubmittedFlag string `json:"submitted_flag" binding:"required"`
 }
 
 // SubmitFlag handles the HTTP request to submit a flag
 func (h *ChallengeHandler) SubmitFlag(c *gin.Context) {
-	var req SubmitFlagRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var req SubmitFlagRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        log.Printf("Error binding JSON: %v", err)
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	success, err := h.challengeUseCase.VerifyAndSubmitFlag(req.TeamID, req.ChallengeID, req.SubmittedFlag)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+    log.Printf("Received request: %+v", req)
 
-	if !success {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid flag"})
-		return
-	}
+    teamID, exists := c.Get("team_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: team_id not found in context"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"message": "Flag submitted successfully"})
+    teamIDInt, ok := teamID.(int)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid team_id type in context"})
+        return
+    }
+
+    success, err := h.challengeUseCase.VerifyAndSubmitFlag(teamIDInt, req.ChallengeID, req.SubmittedFlag)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    if !success {
+        c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid flag"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Flag submitted successfully"})
 }
-
 // GetChallenges retrieves and returns all challenges
 func (h *ChallengeHandler) GetChallenges(c *gin.Context) {
 	challenges, err := h.challengeUseCase.GetChallenges()

@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Admin Dashboard - Amrita CTF</title>
 
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+=======
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AMRITA CTF</title>
+>>>>>>> ea197e3fe1d8fb892663203d834356b2d9f9e26b
     <link rel="stylesheet" href="css/bootstrap4-neon-glow.min.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="css/main.css">
@@ -144,7 +150,7 @@
         // Challenge Management Functions
         async function fetchChallenges() {
     try {
-        const response = await fetch("/viewchallenge"); // Corrected route
+        const response = await fetch("/admin/challenges"); // Corrected route
         const challenges = await response.json();
         const challengesList = document.getElementById("challengesList");
         challengesList.innerHTML = "";
@@ -177,7 +183,7 @@ async function addChallenge() {
     };
 
     try {
-        const response = await fetch("/addchallenge", { // Corrected route
+        const response = await fetch("/admin/addchallenge", { // Corrected route
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(challenge)
@@ -207,7 +213,7 @@ async function updateChallenge() {
     };
 
     try {
-        const response = await fetch("/updatechallenge", { // Corrected route
+        const response = await fetch("/admin/updatechallenge", { // Corrected route
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(challenge)
@@ -228,7 +234,7 @@ async function updateChallenge() {
 async function deleteChallenge(id) {
     if (confirm("Are you sure you want to delete this challenge?")) {
         try {
-            const response = await fetch(`/deletechallenge/${id}`, { // Correct URL
+            const response = await fetch(`/admin/deletechallenge/${id}`, { // Correct URL
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });
@@ -252,7 +258,7 @@ async function deleteChallenge(id) {
             setInterval(showTime, 1000);
             
             // Load teams and users
-            fetch("/teams")
+            fetch("/admin/teams")
                 .then(response => response.json())
                 .then(teams => {
                     const teamList = document.getElementById("teamList");
@@ -263,16 +269,16 @@ async function deleteChallenge(id) {
                     ).join("");
                 });
 
-            fetch("/users")
-                .then(response => response.json())
-                .then(users => {
-                    const userList = document.getElementById("userList");
-                    userList.innerHTML = users.map(user => 
-                        `<div class="list-group-item bg-dark text-white">
-                            ${user.username} - Team: ${user.team}
-                        </div>`
-                    ).join("");
-                });
+            // fetch("/admin/users")
+            //     .then(response => response.json())
+            //     .then(users => {
+            //         const userList = document.getElementById("userList");
+            //         userList.innerHTML = users.map(user => 
+            //             `<div class="list-group-item bg-dark text-white">
+            //                 ${user.username} - Team: ${user.team}
+            //             </div>`
+            //         ).join("");
+            //     });
         };
 
         // Socket events

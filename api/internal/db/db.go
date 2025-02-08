@@ -20,6 +20,8 @@ func InitDB() *gorm.DB {
 	err = db.AutoMigrate(
 		&models.Team{},
 	    &models.Challenge{},
+		&models.Submission{},
+		&models.Score{},
        )
 	if err != nil {
 		log.Fatalf("❌ AutoMigration failed: %v", err)

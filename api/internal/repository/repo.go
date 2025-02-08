@@ -1,6 +1,5 @@
 package repository
-
-import (
+import(
 	"errors"
 	"time"
 
@@ -22,6 +21,7 @@ func (r *Repository) GetTeams() ([]models.Team, error) {
 	err := r.db.Find(&teams).Error
 	return teams, err
 }
+
 
 // GetChallenges - Fetch all challenges from DB
 func (r *Repository) GetChallenges() ([]models.Challenge, error) {

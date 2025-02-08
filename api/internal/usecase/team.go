@@ -2,14 +2,16 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/ctf-api/internal/middleware"
 	"github.com/ctf-api/internal/models"
 	"github.com/ctf-api/internal/repository"
 )
 
 type TeamUsecase interface {
 	RegisterTeam(teamName, password string) error
-	LoginTeam(teamName, password string) (bool, error)
+	LoginTeam(teamName, password string) (string, string, int, error)
 }
 
 type teamUsecase struct {
@@ -26,28 +28,44 @@ func (u *teamUsecase) RegisterTeam(teamName, password string) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println(hashedPassword)
 	team := &models.Team{
-		Name:     teamName,
+		Name:         teamName,
 		PasswordHash: hashedPassword,
 	}
 
 	return u.repo.CreateTeam(team)
 }
 
-func (u *teamUsecase) LoginTeam(teamName, password string) (bool, error) {
+func (u *teamUsecase) LoginTeam(teamName, password string) (string, string, int, error) {
 	team, err := u.repo.GetTeamByName(teamName)
 	if err != nil {
-		return false, errors.New("team not found")
+		return "", "", 0, errors.New("team not found")
 	}
 
 	if team.IsBlocked {
-		return false, errors.New("team is blocked by admin")
+		return "", "", 0, errors.New("team is blocked by admin")
 	}
 
 	if !models.CheckPassword(team.PasswordHash, password) {
-		return false, errors.New("invalid credentials")
+		return "", "", 0, errors.New("invalid credentials")
 	}
 
-	return true, nil
+	var token string
+	var errToken error
+	var role string
+
+	if team.IsAdmin {
+		token, errToken = middleware.GenerateAdminToken(int(team.ID))
+		role = "admin"
+	} else {
+		token, errToken = middleware.GenerateTeamToken(int(team.ID))
+		role = "team"
+	}
+
+	if errToken != nil {
+		return "", "", 0, errToken
+	}
+
+	return token, role, int(team.ID), nil
 }

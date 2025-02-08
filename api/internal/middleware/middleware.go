@@ -1,38 +1,66 @@
 package middleware
 
 import (
-	"net/http"
-	"strconv"
+	"fmt"
+	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 )
 
-func errorHandler(c *gin.Context, err error) {
-	if _, ok := err.(*InvalidTokenError); ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "invalid token",
-		})
-		return
-	}
-
-	// Handle other errors here
+func GenerateTeamToken(teamID int) (string, error) {
+	return generateToken(teamID, "team")
 }
-func UserAuth(c *gin.Context) {
-	// s := c.Request.Header.Get("Authorization")
-	tokenString, err := c.Cookie("UserAuth")
+
+func GenerateAdminToken(adminID int) (string, error) {
+	return generateToken(adminID, "admin")
+}
+
+func generateToken(teamID int, role string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":   teamID,
+		"role": role, // Include role in the token
+		"exp":  time.Now().Add(time.Hour * 1).Unix(),
+	})
+
+	return token.SignedString([]byte("secret-key")) // Ensure consistent secret key
+}
+
+
+type InvalidTokenError struct {
+	error
+}
+
+func (e *InvalidTokenError) Error() string {
+	return "invalid token"
+}
+
+func ValidateToken(token string) (int, error) {
+	Tokenvalue, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return []byte("secret-key"), nil
+	})
 	if err != nil {
-		errorHandler(c, err)
-		return
+		return 0, &InvalidTokenError{err}
 	}
 
-	userId, err := ValidateToken(tokenString)
-	if err != nil {
-		errorHandler(c, err)
-		return
+	if Tokenvalue == nil || !Tokenvalue.Valid {
+		return 0, &InvalidTokenError{fmt.Errorf("invalid token")}
 	}
 
-	userIdStr := strconv.Itoa(userId)
-	c.SetCookie("userId", userIdStr, 3600, "/", "", false, true)
+	var parsedID interface{}
+	if claims, ok := Tokenvalue.Claims.(jwt.MapClaims); ok && Tokenvalue.Valid {
+		parsedID = claims["id"]
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+			return 0, &InvalidTokenError{fmt.Errorf("token expired")}
+		}
+	}
+	value, ok := parsedID.(float64)
+	if !ok {
+		return 0, &InvalidTokenError{fmt.Errorf("expected an int value, but got %T", parsedID)}
+	}
 
-	c.Next()
+	id := int(value)
+	return id, nil
 }

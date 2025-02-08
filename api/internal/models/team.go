@@ -3,12 +3,14 @@ package models
 import "golang.org/x/crypto/bcrypt"
 
 type Team struct {
-	ID           int    `gorm:"primaryKey"`
-	Name         string `gorm:"unique;not null"`
-	PasswordHash string `gorm:"not null"`
-	Score        int    `gorm:"not null;default:0;check:score >= 0"`
-	IsBlocked    bool   `gorm:"default:false"`
+	ID           int   `gorm:"primaryKey"`
+	Name         string `gorm:"unique"`
+	PasswordHash string
+	Score        int
+	IsBlocked    bool
+	IsAdmin      bool `gorm:"default:false"` // New field
 }
+
 
 
 // HashPassword hashes the given password
