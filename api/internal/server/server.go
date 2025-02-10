@@ -91,6 +91,8 @@ func (s *Server) setupRoutes() {
 		adminRoutes.DELETE("/deletechallenge/:id", s.challengehandlers.DeleteChallenge)
 		adminRoutes.GET("/teams", s.handlers.GetTeams)
 	}
+	SetupSocketServer(s.router)
+	
 
 	// 📌 WebSocket (Real-time updates)
 	s.router.GET("/ws", s.handlers.HandleWebSocket)

@@ -20,7 +20,8 @@ func NewHandlers(uc *usecase.Usecase) *Handlers {
 }
 
 func (h *Handlers) GetTeams(c *gin.Context) {
-	teams, err := h.uc.GetTeams() // Removed context parameter
+	teams, err := h.uc.GetTeams() 
+	log.Println("hanlder reached")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return

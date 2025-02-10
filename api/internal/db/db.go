@@ -9,7 +9,7 @@ import (
 )
 
 // InitDB initializes and returns a GORM database instance
-func InitDB() *gorm.DB {
+func InitDB(config ) *gorm.DB {
 	dsn := "host=localhost user=postgres password=partner dbname=ctf_db port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

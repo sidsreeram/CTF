@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"log"
 	"github.com/ctf-api/internal/models"
 	"github.com/ctf-api/internal/repository"
 )
@@ -14,6 +15,7 @@ func NewUsecase(repo *repository.Repository) *Usecase {
 }
 
 func (u *Usecase) GetTeams() ([]models.Team, error) {
+	log.Println("usecase ")
 	return u.repo.GetTeams()
 }
 

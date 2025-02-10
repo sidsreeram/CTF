@@ -1,6 +1,8 @@
 package repository
-import(
+
+import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/ctf-api/internal/models"
@@ -19,6 +21,7 @@ func NewRepository(db *gorm.DB) *Repository {
 func (r *Repository) GetTeams() ([]models.Team, error) {
 	var teams []models.Team
 	err := r.db.Find(&teams).Error
+	log.Println(teams)
 	return teams, err
 }
 
