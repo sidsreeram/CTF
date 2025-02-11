@@ -49,12 +49,12 @@ func (s *Server) setupRoutes() {
 	s.router.SetFuncMap(funcMap)
 
 	// Load templates and static files
-	s.router.LoadHTMLGlob("../../../template/*.html")
-	s.router.Static("/css", "../../../template/css")
-	s.router.Static("/js", "../../../template/js")
-	s.router.Static("/images", "../../../template/images")
-	s.router.Static("/fonts", "../../../template/fonts")
-	s.router.Static("/admin/css", "../../../template/css")
+	s.router.LoadHTMLGlob("api/template/*.html")
+	s.router.Static("/css", "api/template/css")
+	s.router.Static("/js", "api/template/js")
+	s.router.Static("/images", "api/template/images")
+	s.router.Static("/fonts", "api/template/fonts")
+	s.router.Static("/admin/css", "api/template/css")
 
 	// 📌 Public Routes (No Authentication Required)
 	s.router.GET("/", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "index.html", nil) })
@@ -63,11 +63,12 @@ func (s *Server) setupRoutes() {
 	s.router.GET("/instructions", func(c *gin.Context) { c.HTML(http.StatusOK, "instructions.html", nil) })
 	s.router.GET("/quests", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "quests.html", nil) })
 	s.router.GET("/about", func(c *gin.Context) { c.HTML(http.StatusOK, "about.html", nil) })
+	s.router.GET("/hackerboard", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "hackerboard.html", nil) })
 
 	// API Endpoints - Public
 	s.router.POST("/register", s.teamhandlers.RegisterTeam)
 	s.router.POST("/login", s.teamhandlers.LoginTeam)
-	s.router.GET("/hackerboard", s.handlers.GetScores)
+	s.router.GET("/api/scores", s.handlers.GetScores)
 	s.router.GET("/getchallenges", s.challengehandlers.GetChallenges)
 
 	// 📌 **Authenticated Team Routes (Requires Login)**

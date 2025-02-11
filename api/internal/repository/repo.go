@@ -40,11 +40,15 @@ func (r *repository) GetChallenges() ([]models.Challenge, error) {
 // GetScores - Fetch all scores from DB
 func (r *repository) GetScores() ([]models.Team, error) {
 	var teams []models.Team
-	if err := r.db.Select("name, score").Order("score DESC").Find(&teams).Error; err != nil {
+	if err := r.db.Select("name, score").
+		Where("is_admin = ?", false).  // Filter out admin teams
+		Order("score DESC").
+		Find(&teams).Error; err != nil {
 		return nil, err
 	}
 	return teams, nil
 }
+
 
 // UpdateScore - Update a team's score in DB
 func (r *repository) UpdateScore(teamName, challengeName string, score int) error {

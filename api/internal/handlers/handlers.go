@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"text/template"
 
 	"github.com/ctf/api/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -18,7 +17,7 @@ func NewHandlers(uc usecase.UseCase) *Handlers {
 }
 
 func (h *Handlers) GetTeams(c *gin.Context) {
-	teams, err := h.uc.GetTeams() 
+	teams, err := h.uc.GetTeams()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -36,25 +35,17 @@ func (h *Handlers) GetChallenges(c *gin.Context) {
 }
 
 func (h *Handlers) GetScores(c *gin.Context) {
-	teamscore, err := h.uc.GetScores() // Removed context parameter
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
-		return
-	}
-	funcMap := template.FuncMap{
-		"add": func(a, b int) int { return a + b },
-	}
-	tmpl, err := template.New("hackerboard.html").Funcs(funcMap).ParseFiles("../../../template/hackerboard.html")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading template"})
-		return
-	}
-	err = tmpl.Execute(c.Writer, gin.H{"Scores": teamscore})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing template"})
-		return
-	}
+    teamscore, err := h.uc.GetScores() // Fetch scores
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+        return
+    }
+
+    // Ensure the response is an array of objects with proper field names
+    c.JSON(http.StatusOK, gin.H{"scores": teamscore})
 }
+
+
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },

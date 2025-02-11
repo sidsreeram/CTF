@@ -84,58 +84,60 @@
         let scoreChart;
 
         async function fetchScores() {
-            try {
-                const response = await fetch("/hackerboard");
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                const scores = await response.json();
+    try {
+        const response = await fetch("/api/scores"); // Fetch from new API route
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+const scores = data.scores; // Access the correct field
 
-                updateTable(scores);
-                updateGraph(scores);
-            } catch (error) {
-                console.error("Error fetching scores:", error);
+        updateTable(scores);
+        updateGraph(scores);
+    } catch (error) {
+        console.error("Error fetching scores:", error);
+    }
+}
+
+function updateTable(data) {
+    let tableBody = document.getElementById("scoreTableBody");
+    tableBody.innerHTML = data.map((entry, index) => `
+        <tr>
+            <th scope="row">${index + 1}</th>
+            <td>${entry.team_name || entry.Name}</td>  <!-- Fix field names -->
+            <td>${entry.score || entry.Score}</td>
+        </tr>
+    `).join("");
+}
+
+
+function updateGraph(data) {
+    let labels = data.map(entry => entry.team_name || entry.Name);
+    let scores = data.map(entry => entry.score || entry.Score);
+
+    let ctx = document.getElementById("scoreChart").getContext("2d");
+
+    if (scoreChart) scoreChart.destroy();
+
+    scoreChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Score",
+                data: scores,
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: "Score" } }
             }
         }
-
-        function updateTable(data) {
-            let tableBody = document.getElementById("scoreTableBody");
-            tableBody.innerHTML = data.map((entry, index) => `
-                <tr>
-                    <th scope="row">${index + 1}</th>
-                    <td>${entry.team_name}</td>
-                    <td>${entry.score}</td>
-                </tr>
-            `).join("");
-        }
-
-        function updateGraph(data) {
-            let labels = data.map(entry => entry.team_name);
-            let scores = data.map(entry => entry.score);
-
-            let ctx = document.getElementById("scoreChart").getContext("2d");
-
-            if (scoreChart) scoreChart.destroy();
-
-            scoreChart = new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Score",
-                        data: scores,
-                        backgroundColor: "rgba(75, 192, 192, 0.6)",
-                        borderColor: "rgba(75, 192, 192, 1)",
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: "Score" } }
-                    }
-                }
-            });
-        }
+    });
+}
 
         document.addEventListener("DOMContentLoaded", () => {
             fetchScores();
