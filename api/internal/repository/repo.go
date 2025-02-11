@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ctf-api/internal/models"
+	"github.com/ctf/api/internal/models"
 	"gorm.io/gorm"
 )
 

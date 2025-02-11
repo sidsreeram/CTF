@@ -3,9 +3,9 @@ package usecase
 import (
 	"errors"
 
-	"github.com/ctf-api/internal/middleware"
-	"github.com/ctf-api/internal/models"
-	"github.com/ctf-api/internal/repository"
+	"github.com/ctf/api/internal/middleware"
+	"github.com/ctf/api/internal/models"
+	"github.com/ctf/api/internal/repository"
 )
 
 type TeamUsecase interface {

@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ctf-api/internal/models"
+	"github.com/ctf/api/internal/models"
 	"github.com/gin-gonic/gin"
 )
 

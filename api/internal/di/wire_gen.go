@@ -7,12 +7,12 @@
 package di
 
 import (
-	"github.com/ctf-api/internal/config"
-	"github.com/ctf-api/internal/db"
-	"github.com/ctf-api/internal/handlers"
-	"github.com/ctf-api/internal/repository"
-	"github.com/ctf-api/internal/server"
-	"github.com/ctf-api/internal/usecase"
+	"github.com/ctf/api/internal/config"
+	"github.com/ctf/api/internal/db"
+	"github.com/ctf/api/internal/handlers"
+	"github.com/ctf/api/internal/repository"
+	"github.com/ctf/api/internal/server"
+	"github.com/ctf/api/internal/usecase"
 	"github.com/google/wire"
 )
 
@@ -26,14 +26,14 @@ func InitializeServer() (*server.Server, error) {
 	}
 	db := database.InitDB(config)
 	repositoryRepository := repository.NewRepository(db)
-	usecaseUsecase := usecase.NewUsecase(repositoryRepository)
-	handlersHandlers := handlers.NewHandlers(usecaseUsecase)
+	useCase := usecase.NewUsecase(repositoryRepository)
+	handlersHandlers := handlers.NewHandlers(useCase)
 	teamRepository := repository.NewTeamRepository(db)
 	teamUsecase := usecase.NewTeamUsecase(teamRepository)
 	teamHandler := handlers.NewTeamHandler(teamUsecase)
 	challengeRepository := repository.NewChallengeRepository(db)
-	challengeUseCase := usecase.NewChallengeUseCase(challengeRepository)
-	challengeHandler := handlers.NewChallengeHandler(challengeUseCase)
+	challengeUsecase := usecase.NewChallengeUseCase(challengeRepository)
+	challengeHandler := handlers.NewChallengeHandler(challengeUsecase)
 	serverServer := server.NewServer(handlersHandlers, teamHandler, challengeHandler)
 	return serverServer, nil
 }

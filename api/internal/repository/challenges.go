@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ctf-api/internal/models"
+	"github.com/ctf/api/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )

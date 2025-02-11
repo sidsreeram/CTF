@@ -1,14 +1,14 @@
 package di
 
 import (
-    "github.com/ctf-api/internal/config"
-    "github.com/ctf-api/internal/db"
-    "github.com/ctf-api/internal/handlers"
-    "github.com/ctf-api/internal/repository"
-    "github.com/ctf-api/internal/server"
-    "github.com/ctf-api/internal/usecase"
+	"github.com/ctf/api/internal/config"
+	database "github.com/ctf/api/internal/db"
+	"github.com/ctf/api/internal/handlers"
+	"github.com/ctf/api/internal/repository"
+	"github.com/ctf/api/internal/server"
+	"github.com/ctf/api/internal/usecase"
 
-    "github.com/google/wire"
+	"github.com/google/wire"
 )
 
 // ProvideConfig loads the configuration

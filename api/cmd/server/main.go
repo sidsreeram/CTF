@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	wire "github.com/ctf-api/internal/di"
+	wire "github.com/ctf/api/internal/di"
 )
 
 func main() {

@@ -10,6 +10,8 @@ services:
       - api/cmd/server/.env  # Load environment variables
     ports:
       - "3000:3000"  # Expose backend port
+    volumes:
+      - ./template:/app/template  # Mount the template folder
     networks:
       - ctf_network
     restart: always

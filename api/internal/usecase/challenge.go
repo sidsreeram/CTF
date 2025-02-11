@@ -2,10 +2,10 @@
 package usecase
 
 import (
-	"golang.org/x/crypto/bcrypt"
+	"github.com/ctf/api/internal/repository"
+	"github.com/ctf/api/internal/models"
 
-	"github.com/ctf-api/internal/models"
-	"github.com/ctf-api/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type challengeUseCase struct {

@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	
 	"net/http"
 	"text/template"
 
-	"github.com/ctf-api/internal/usecase"
-
+	"github.com/ctf/api/internal/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )

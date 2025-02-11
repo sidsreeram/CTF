@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"github.com/ctf-api/internal/models"
-	"github.com/ctf-api/internal/repository"
+	"github.com/ctf/api/internal/models"
+	"github.com/ctf/api/internal/repository"
 )
 
 type usecase struct {

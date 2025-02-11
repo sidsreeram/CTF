@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctf-api/internal/handlers"
-	"github.com/ctf-api/internal/middleware"
+	"github.com/ctf/api/internal/handlers"
+	"github.com/ctf/api/internal/middleware"
 	"github.com/gin-gonic/gin"
 	socketio "github.com/googollee/go-socket.io"
 )

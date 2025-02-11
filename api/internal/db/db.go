@@ -3,8 +3,8 @@ package database
 import (
 	"log"
 
-	"github.com/ctf-api/internal/config"
-	"github.com/ctf-api/internal/models"
+	"github.com/ctf/api/internal/config"
+	"github.com/ctf/api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

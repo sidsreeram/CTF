@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ctf-api/internal/usecase"
+	"github.com/ctf/api/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
 
