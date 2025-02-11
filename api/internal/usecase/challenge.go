@@ -8,18 +8,25 @@ import (
 	"github.com/ctf-api/internal/repository"
 )
 
-type ChallengeUseCase struct {
+type challengeUseCase struct {
 	challengeRepo repository.ChallengeRepository
 }
+type ChallengeUsecase interface {
+	CreateChallenge(name, description, downloadlink, hint, flagText string, score int) error
+	VerifyAndSubmitFlag(teamID, challengeID int, submittedFlag string) (bool, error) 
+	GetChallenges() ([]models.Challenge, error)
+	DeleteChallenge(id int) error
+	
+}
 
-func NewChallengeUseCase(repo repository.ChallengeRepository) *ChallengeUseCase {
-	return &ChallengeUseCase{
+func NewChallengeUseCase(repo repository.ChallengeRepository) ChallengeUsecase {
+	return &challengeUseCase{
 		challengeRepo: repo,
 	}
 }
 
 // CreateChallenge creates a new challenge with a hashed flag
-func (uc *ChallengeUseCase) CreateChallenge(name, description, downloadlink, hint, flagText string, score int) error {
+func (uc *challengeUseCase) CreateChallenge(name, description, downloadlink, hint, flagText string, score int) error {
 	// Hash the flag before storing
 	hashedFlag, err := bcrypt.GenerateFromPassword([]byte(flagText), bcrypt.DefaultCost)
 	if err != nil {
@@ -40,21 +47,17 @@ func (uc *ChallengeUseCase) CreateChallenge(name, description, downloadlink, hin
 }
 
 // VerifyAndSubmitFlag verifies a flag submission and updates team score
-func (uc *ChallengeUseCase) VerifyAndSubmitFlag(teamID, challengeID int, submittedFlag string) (bool, error) {
+func (uc *challengeUseCase) VerifyAndSubmitFlag(teamID, challengeID int, submittedFlag string) (bool, error) {
 	return uc.challengeRepo.VerifyFlag(teamID, challengeID, submittedFlag)
 }
 
 // GetChallenges retrieves all available challenges
-func (uc *ChallengeUseCase) GetChallenges() ([]models.Challenge, error) {
+func (uc *challengeUseCase) GetChallenges() ([]models.Challenge, error) {
 	return uc.challengeRepo.GetChallenges()
 }
 
-// UpdateChallenge allows updating challenge details
-func (uc *ChallengeUseCase) UpdateChallenge(challenge *models.Challenge) error {
-	return uc.challengeRepo.UpdateChallenge(challenge)
-}
 
 // DeleteChallenge removes a challenge by name
-func (uc *ChallengeUseCase) DeleteChallenge(id int) error {
+func (uc *challengeUseCase) DeleteChallenge(id int) error {
 	return uc.challengeRepo.DeleteChallenge(id)
 }

@@ -9,9 +9,16 @@ import (
 func main() {
 	// Initialize Database
 	// db := database.InitDB()
+	// config, configErr := config.LoadConfig()
+	// if configErr != nil {
+	// 	log.Fatal("Error in configuration", configErr)
+	// }
 
 	// Initialize Server with Dependency Injection
-	server := wire.InitializeServer()
+	server, err := wire.InitializeServer()
+	if err != nil {
+		log.Fatalf("Failed to inject Dependencies :%v", err)
+	}
 
 	// Start Server
 	log.Println("🚀 Server running on port 3000")

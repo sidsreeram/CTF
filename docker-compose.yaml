@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: .  # Use current directory as build context
+      dockerfile: Dockerfile  # Use the existing Dockerfile
+    container_name: ctf_backend
+    env_file:
+      - api/cmd/server/.env  # Load environment variables
+    ports:
+      - "3000:3000"  # Expose backend port
+    networks:
+      - ctf_network
+    restart: always
+
+  frontend:
+    image: node:18  # Use Node.js to serve static files
+    container_name: ctf_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app  # Mount frontend code
+    command: npx http-server -p 5500
+    ports:
+      - "5500:5500"  # Map frontend port
+    networks:
+      - ctf_network
+    restart: always
+
+networks:
+  ctf_network:
+    driver: bridge

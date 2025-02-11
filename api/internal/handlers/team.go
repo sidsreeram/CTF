@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -57,8 +56,6 @@ func (h *TeamHandler) LoginTeam(c *gin.Context) {
 		return
 	}
 
-	log.Println("Generated Token:", token)
-
 	// Set authentication cookies
 	if role == "admin" {
 		c.SetCookie("AdminAuth", token, 3600, "/", "", false, true)
@@ -75,14 +72,35 @@ func (h *TeamHandler) LoginTeam(c *gin.Context) {
 		"team_id":       teamID,
 	})
 }
+func (h *TeamHandler) BlockTeam(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid team ID"})
+		return
+	}
 
+	err = h.usecase.BlockTeam(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to block team"})
+		return
+	}
 
-// Generate JWT Token
-// func generateToken(teamID int) (string, error) {
-// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-// 		"id":  teamID,
-// 		"exp": time.Now().Add(time.Hour * 1).Unix(), // Token expires in 1 hour
-// 	})
+	c.JSON(http.StatusOK, gin.H{"message": "Team blocked successfully"})
+}
+func (h *TeamHandler) UnblockTeam(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid team ID"})
+		return
+	}
 
-// 	return token.SignedString(jwtSecret)
-// }
+	err = h.usecase.UnblockTeam(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unblock team"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Team unblocked successfully"})
+}

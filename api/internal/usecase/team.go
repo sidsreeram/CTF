@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/ctf-api/internal/middleware"
 	"github.com/ctf-api/internal/models"
@@ -12,6 +11,8 @@ import (
 type TeamUsecase interface {
 	RegisterTeam(teamName, password string) error
 	LoginTeam(teamName, password string) (string, string, int, error)
+	BlockTeam(id int) error
+	UnblockTeam(id int) error
 }
 
 type teamUsecase struct {
@@ -28,7 +29,6 @@ func (u *teamUsecase) RegisterTeam(teamName, password string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(hashedPassword)
 	team := &models.Team{
 		Name:         teamName,
 		PasswordHash: hashedPassword,
@@ -68,4 +68,10 @@ func (u *teamUsecase) LoginTeam(teamName, password string) (string, string, int,
 	}
 
 	return token, role, int(team.ID), nil
+}
+func (u *teamUsecase) BlockTeam(id int) error {
+	return u.repo.BlockTeam(id)
+}
+func (u *teamUsecase) UnblockTeam(id int) error {
+	return u.repo.UnblockTeam(id)
 }

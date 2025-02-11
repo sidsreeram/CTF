@@ -1,20 +1,22 @@
 package repository
 
 import (
-    "errors"
-    "fmt"
-    "regexp"
-    "strings"
+	"errors"
+	"fmt"
+	"log"
+	"regexp"
+	"strings"
 
-    "github.com/ctf-api/internal/models"
-    "gorm.io/gorm"
+	"github.com/ctf-api/internal/models"
+	"gorm.io/gorm"
 )
 
 type TeamRepository interface {
     CreateTeam(team *models.Team) error
     GetTeamByName(name string) (*models.Team, error)
     ValidateTeamName(name string) error
-    BlockTeam(teamName string) error
+    BlockTeam(id int) error
+    UnblockTeam(id int) error
 }
 
 type teamRepo struct {
@@ -68,8 +70,15 @@ func (r *teamRepo) GetTeamByName(name string) (*models.Team, error) {
     return &team, nil
 }
 
-func (r *teamRepo) BlockTeam(teamName string) error {
+func (r *teamRepo) BlockTeam(id int) error {
     return r.db.Model(&models.Team{}).
-        Where("name = ?", teamName).
+        Where("id = ?", id).
         Update("is_blocked", true).Error
+}
+func (r *teamRepo) UnblockTeam(id int) error {
+    log.Println("team unblocked")
+
+    return r.db.Model(&models.Team{}).
+        Where("id = ?", id).
+        Update("is_blocked", false).Error
 }

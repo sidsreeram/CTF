@@ -5,16 +5,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ctf-api/internal/models"
 	"github.com/ctf-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
 
 type ChallengeHandler struct {
-	challengeUseCase *usecase.ChallengeUseCase
+	challengeUseCase usecase.ChallengeUsecase
 }
 
-func NewChallengeHandler(uc *usecase.ChallengeUseCase) *ChallengeHandler {
+func NewChallengeHandler(uc usecase.ChallengeUsecase) *ChallengeHandler {
 	return &ChallengeHandler{
 		challengeUseCase: uc,
 	}
@@ -45,9 +44,6 @@ func (h *ChallengeHandler) CreateChallenge(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid score format"})
 		return
 	}
-
-	log.Println("Received Challenge:", req.Name, req.Description, req.DownloadLink, req.Hint, req.Flag, score)
-
 	// Call UseCase to create challenge
 	err = h.challengeUseCase.CreateChallenge(req.Name, req.Description, req.DownloadLink, req.Hint, req.Flag, score)
 	if err != nil {
@@ -60,49 +56,56 @@ func (h *ChallengeHandler) CreateChallenge(c *gin.Context) {
 
 // SubmitFlagRequest defines the structure for flag submission
 type SubmitFlagRequest struct {
-    ChallengeID   int    `json:"challenge_id" binding:"required"`
-    SubmittedFlag string `json:"submitted_flag" binding:"required"`
+	ChallengeID   int    `json:"challenge_id" binding:"required"`
+	SubmittedFlag string `json:"submitted_flag" binding:"required"`
 }
 
 // SubmitFlag handles the HTTP request to submit a flag
 func (h *ChallengeHandler) SubmitFlag(c *gin.Context) {
-    var req SubmitFlagRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        log.Printf("Error binding JSON: %v", err)
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	var req SubmitFlagRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Error binding JSON: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
 
-    log.Printf("Received request: %+v", req)
+	teamID, exists := c.Get("team_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: team_id not found in context"})
+		return
+	}
 
-    teamID, exists := c.Get("team_id")
-    if !exists {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: team_id not found in context"})
-        return
-    }
+	teamIDInt, ok := teamID.(int)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid team_id type in context"})
+		return
+	}
 
-    teamIDInt, ok := teamID.(int)
-    if !ok {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid team_id type in context"})
-        return
-    }
+	success, err := h.challengeUseCase.VerifyAndSubmitFlag(teamIDInt, req.ChallengeID, req.SubmittedFlag)
+	if err != nil {
+		log.Printf("Error verifying flag: %v", err)
 
-    success, err := h.challengeUseCase.VerifyAndSubmitFlag(teamIDInt, req.ChallengeID, req.SubmittedFlag)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+		if err.Error() == "team has already solved this challenge" {
+			c.JSON(http.StatusConflict, gin.H{"message": "Flag already submitted"}) // HTTP 409 Conflict
+			return
+		}
 
-    if !success {
-        c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid flag"})
-        return
-    }
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "An unexpected error occurred"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"message": "Flag submitted successfully"})
+	if !success {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Invalid flag", "success": false}) // HTTP 403 Forbidden
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"message": "Flag submitted successfully", "success": true}) // HTTP 200 OK
 }
+
 // GetChallenges retrieves and returns all challenges
 func (h *ChallengeHandler) GetChallenges(c *gin.Context) {
 	challenges, err := h.challengeUseCase.GetChallenges()
+	log.Println(challenges)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -132,30 +135,4 @@ func (h *ChallengeHandler) DeleteChallenge(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Challenge deleted successfully"})
-}
-
-func (h *ChallengeHandler) UpdateChallenge(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid challenge ID"})
-		return
-	}
-
-	var challenge models.Challenge
-	if err := c.ShouldBindJSON(&challenge); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-
-	// Assign extracted ID
-	challenge.ID = id
-
-	err = h.challengeUseCase.UpdateChallenge(&challenge)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Challenge updated successfully"})
 }

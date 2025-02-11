@@ -50,19 +50,38 @@
             <div class="row" id="challenges-container"></div>
         </div>
     </div>
-
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+const socket = io(window.location.origin);
+socket.on("connect", () => {
+            console.log("Connected to WebSocket server!");
+        });
+    </script>
+    
+    
     <script>
         // Fetch challenges from the backend API
-        async function fetchChallenges() {
-            try {
-                const response = await fetch("/getchallenges");
-                const challenges = await response.json();
-                renderChallenges(challenges);
-            } catch (error) {
-                console.error("Error fetching challenges:", error);
-            }
-        }
 
+async function fetchChallenges() {
+    try {
+        const response = await fetch("/getchallenges");
+        const challenges = await response.json();
+        challenges.forEach(challenge => {
+    challenge.score = Number(challenge.score) || 0; // Ensures it's a number
+});
+        console.log("Fetched challenges:", challenges); // Debugging log
+        renderChallenges(challenges);
+    } catch (error) {
+        console.error("Error fetching challenges:", error);
+    }
+}
+// WebSocket listener to update scores in real-time
+socket.on("update-score", (data) => {
+    console.log("Score update received:", data); // Debugging log
+    if (document.getElementById(`score-${data.challenge_id}`)) {
+        document.getElementById(`score-${data.challenge_id}`).innerText = `${data.new_score} points`;
+    }
+});
         // Render challenges as cards
         function renderChallenges(challenges) {
             const container = document.getElementById("challenges-container");
@@ -73,7 +92,8 @@
                     <div class="col-md-4 mb-3">
                         <div class="card category_general">
                             <div class="card-header solved" data-toggle="collapse" data-target="#problem_id_${index + 1}" aria-expanded="false">
-                                ${challenge.name} <span class="badge">80 points</span>
+                                ${challenge.name} <span class="badge" id="score-${challenge.id}">${String(challenge.score)} points</span>
+
                             </div>
                             <div id="problem_id_${index + 1}" class="collapse">
                                 <div class="card-body">
@@ -104,9 +124,9 @@
 
         // Verify the flag
         async function verifyFlag(challengeId) {
-               const flagInput = document.getElementById(`flag-input-${challengeId}`);
-               const flagResult = document.getElementById(`flag-result-${challengeId}`);
-            const flag = flagInput.value.trim();
+    const flagInput = document.getElementById(`flag-input-${challengeId}`);
+    const flagResult = document.getElementById(`flag-result-${challengeId}`);
+    const flag = flagInput.value.trim();
 
     if (!flag) {
         flagResult.innerHTML = `<div class="alert alert-warning">Please enter a flag.</div>`;
@@ -114,32 +134,34 @@
     }
 
     try {
-        const response = await fetch(window.location.origin + "/team/verifyflag",  {
+        const response = await fetch(window.location.origin + "/team/verifyflag", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 challenge_id: challengeId,
-                submitted_flag: flag, // Change 'flag' to 'submitted_flag'
+                submitted_flag: flag,
             }),
         });
 
         const result = await response.json();
 
-        if (result.success) {
-            flagResult.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
-        } else {
+        if (response.status === 409) { // Already submitted
             flagResult.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+        } else if (result.success) { // Correct flag
+            flagResult.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+        } else { // Incorrect flag
+            flagResult.innerHTML = `<div class="alert alert-danger">${result.message || "Invalid flag. Try again."}</div>`;
         }
     } catch (error) {
         console.error("Error verifying flag:", error);
         flagResult.innerHTML = `<div class="alert alert-danger">An error occurred. Please try again.</div>`;
     }
 }
-
-        // Fetch and render challenges on page load
-        fetchChallenges();
+document.addEventListener("DOMContentLoaded", () => {
+    fetchChallenges();
+});
     </script>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

@@ -12,7 +12,6 @@ import (
 type ChallengeRepository interface {
 	CreateChallenge(challenge *models.Challenge) error
 	GetChallengeByName(name string) (*models.Challenge, error)
-	UpdateChallenge(challenge *models.Challenge) error
 	DeleteChallenge(id int) error
 	GetChallenges() ([]models.Challenge, error)
 	VerifyFlag(teamID int, challengeID int, flag string) (bool, error)
@@ -44,10 +43,7 @@ func (r *ChallengeRepo) GetChallengeByName(name string) (*models.Challenge, erro
 	return &challenge, nil
 }
 
-// UpdateChallenge - Update an existing challenge
-func (r *ChallengeRepo) UpdateChallenge(challenge *models.Challenge) error {
-	return r.db.Save(challenge).Error
-}
+
 
 // DeleteChallenge - Delete a challenge by its name
 func (r *ChallengeRepo) DeleteChallenge(id int) error {
@@ -66,61 +62,82 @@ func (r *ChallengeRepo) GetChallenges() ([]models.Challenge, error) {
 // VerifyFlag checks if the submitted flag is correct and updates scores
 func (r *ChallengeRepo) VerifyFlag(teamID int, challengeID int, submittedFlag string) (bool, error) {
 	var challenge models.Challenge
-	if err := r.db.First(&challenge, challengeID).Error; err != nil {
+	tx := r.db.Begin() // Start transaction
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Lock challenge row to prevent concurrent updates
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&challenge, challengeID).Error; err != nil {
+		tx.Rollback()
 		return false, err
 	}
 
-	// Check if the team has already solved this challenge
+	// Check if team already solved this challenge
 	var existingScore models.Score
-	if err := r.db.Where("team_id = ? AND challenge_id = ?", teamID, challengeID).First(&existingScore).Error; err == nil {
+	if err := tx.Where("team_id = ? AND challenge_id = ?", teamID, challengeID).First(&existingScore).Error; err == nil {
+		tx.Rollback()
 		return false, errors.New("team has already solved this challenge")
 	}
 
-	// Verify the flag using bcrypt
+	// Verify flag using bcrypt
 	err := bcrypt.CompareHashAndPassword([]byte(challenge.Flag), []byte(submittedFlag))
 	if err != nil {
+		tx.Rollback()
 		return false, nil // Incorrect flag
 	}
 
-	// Calculate the score based on the number of solvers
+	// **🔹 Calculate the score dynamically based on solver count**
+	var solverCount int64
+	tx.Model(&models.Score{}).Where("challenge_id = ?", challengeID).Count(&solverCount)
+
 	var score int
-	switch challenge.Count {
+	switch solverCount {
 	case 0:
-		score = challenge.Score // First solver gets 100% of the base score
+		score = challenge.Score // First solver
 	case 1:
-		score = int(float64(challenge.Score) * 0.9) // Second solver gets 90%
+		score = int(float64(challenge.Score) * 0.9) // Second solver
 	case 2:
-		score = int(float64(challenge.Score) * 0.8) // Third solver gets 80%
+		score = int(float64(challenge.Score) * 0.8) // Third solver
 	default:
-		score = int(float64(challenge.Score) * 0.7) // Others get 70%
+		score = int(float64(challenge.Score) * 0.7) // Others
 	}
 
-	// Update the challenge count
+	// **🔹 Increment challenge count**
 	challenge.Count++
-	if err := r.db.Save(&challenge).Error; err != nil {
+	if err := tx.Save(&challenge).Error; err != nil {
+		tx.Rollback()
 		return false, err
 	}
 
-	// Update the team's score
+	// **🔹 Update team score**
 	var team models.Team
-	if err := r.db.First(&team, teamID).Error; err != nil {
+	if err := tx.First(&team, teamID).Error; err != nil {
+		tx.Rollback()
 		return false, err
 	}
 	team.Score += score
-	if err := r.db.Save(&team).Error; err != nil {
+	if err := tx.Save(&team).Error; err != nil {
+		tx.Rollback()
 		return false, err
 	}
 
-	// Record the score for this team and challenge
+	// **🔹 Store score in DB**
 	newScore := models.Score{
+		TeamID:      teamID,
 		TeamName:    team.Name,
 		ChallengeID: challengeID,
 		Score:       score,
 		Timestamp:   time.Now(),
 	}
-	if err := r.db.Create(&newScore).Error; err != nil {
+	if err := tx.Create(&newScore).Error; err != nil {
+		tx.Rollback()
 		return false, err
 	}
+
+	tx.Commit()
 
 	return true, nil
 }

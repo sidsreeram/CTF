@@ -2,39 +2,43 @@ package repository
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/ctf-api/internal/models"
 	"gorm.io/gorm"
 )
 
-type Repository struct {
+type repository struct {
 	db *gorm.DB
 }
+type Repository interface {
+	GetTeams() ([]models.Team, error)
+	GetChallenges() ([]models.Challenge, error) 
+	GetScores() ([]models.Team, error)
+	UpdateScore(teamName, challengeName string, score int) error 
+	
+}
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+func NewRepository(db *gorm.DB) Repository {
+	return &repository{db: db}
 }
 
 // GetTeams - Fetch all teams from DB
-func (r *Repository) GetTeams() ([]models.Team, error) {
+func (r *repository) GetTeams() ([]models.Team, error) {
 	var teams []models.Team
-	err := r.db.Find(&teams).Error
-	log.Println(teams)
+	 err := r.db.Select("id,name, score,is_blocked").Find(&teams).Error
 	return teams, err
 }
 
-
 // GetChallenges - Fetch all challenges from DB
-func (r *Repository) GetChallenges() ([]models.Challenge, error) {
+func (r *repository) GetChallenges() ([]models.Challenge, error) {
 	var challenges []models.Challenge
 	err := r.db.Find(&challenges).Error
 	return challenges, err
 }
 
 // GetScores - Fetch all scores from DB
-func (r *Repository) GetScores() ([]models.Team, error) {
+func (r *repository) GetScores() ([]models.Team, error) {
 	var teams []models.Team
 	if err := r.db.Select("name, score").Order("score DESC").Find(&teams).Error; err != nil {
 		return nil, err
@@ -42,17 +46,15 @@ func (r *Repository) GetScores() ([]models.Team, error) {
 	return teams, nil
 }
 
-
 // UpdateScore - Update a team's score in DB
-func (r *Repository) UpdateScore(teamName, challengeName string, score int) error {
+func (r *repository) UpdateScore(teamName, challengeName string, score int) error {
 	var existingScore models.Score
 	// Check if the score already exists for this team and challenge
-	if err := r.db.Where("team_name = ? AND challenge_name = ?", teamName, challengeName).First(&existingScore).Error; err != nil {
+	if err := r.db.Where("team_id = ? ", teamName, challengeName).First(&existingScore).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// If no existing record, create a new one
 			newScore := models.Score{
 				TeamName:      teamName,
-				ChallengeName: challengeName,
 				Score:         score,
 				Timestamp:     time.Now(), // Use time.Now() for current timestamp
 			}
@@ -76,10 +78,3 @@ func (r *Repository) UpdateScore(teamName, challengeName string, score int) erro
 	return nil
 }
 
-
-// UpdateTimerStatus - Updates the CTF timer status
-func (r *Repository) UpdateTimerStatus(status string) error {
-	return r.db.Model(&models.Timer{}).
-		Where("id = ?", 1).
-		Update("status", status).Error
-}

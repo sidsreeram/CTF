@@ -3,14 +3,15 @@ package database
 import (
 	"log"
 
+	"github.com/ctf-api/internal/config"
 	"github.com/ctf-api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 // InitDB initializes and returns a GORM database instance
-func InitDB(config ) *gorm.DB {
-	dsn := "host=localhost user=postgres password=partner dbname=ctf_db port=5432 sslmode=disable"
+func InitDB(config config.Config ) *gorm.DB {
+	dsn := config.DATABASEURL
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("❌ Failed to connect to database: %v", err)

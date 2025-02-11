@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	
 	"net/http"
 	"text/template"
 
@@ -12,16 +12,15 @@ import (
 )
 
 type Handlers struct {
-	uc *usecase.Usecase
+	uc usecase.UseCase
 }
 
-func NewHandlers(uc *usecase.Usecase) *Handlers {
+func NewHandlers(uc usecase.UseCase) *Handlers {
 	return &Handlers{uc: uc}
 }
 
 func (h *Handlers) GetTeams(c *gin.Context) {
 	teams, err := h.uc.GetTeams() 
-	log.Println("hanlder reached")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -49,13 +48,11 @@ func (h *Handlers) GetScores(c *gin.Context) {
 	}
 	tmpl, err := template.New("hackerboard.html").Funcs(funcMap).ParseFiles("../../../template/hackerboard.html")
 	if err != nil {
-		log.Println("Error loading template:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading template"})
 		return
 	}
 	err = tmpl.Execute(c.Writer, gin.H{"Scores": teamscore})
 	if err != nil {
-		log.Println("Error executing template:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing template"})
 		return
 	}

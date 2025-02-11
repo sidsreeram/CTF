@@ -7,17 +7,24 @@
 package di
 
 import (
+	"github.com/ctf-api/internal/config"
 	"github.com/ctf-api/internal/db"
 	"github.com/ctf-api/internal/handlers"
 	"github.com/ctf-api/internal/repository"
 	"github.com/ctf-api/internal/server"
 	"github.com/ctf-api/internal/usecase"
+	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
 
-func InitializeServer() *server.Server {
-	db := database.InitDB()
+// InitializeServer generates the Wire dependency injection
+func InitializeServer() (*server.Server, error) {
+	config, err := ProvideConfig()
+	if err != nil {
+		return nil, err
+	}
+	db := database.InitDB(config)
 	repositoryRepository := repository.NewRepository(db)
 	usecaseUsecase := usecase.NewUsecase(repositoryRepository)
 	handlersHandlers := handlers.NewHandlers(usecaseUsecase)
@@ -28,5 +35,16 @@ func InitializeServer() *server.Server {
 	challengeUseCase := usecase.NewChallengeUseCase(challengeRepository)
 	challengeHandler := handlers.NewChallengeHandler(challengeUseCase)
 	serverServer := server.NewServer(handlersHandlers, teamHandler, challengeHandler)
-	return serverServer
+	return serverServer, nil
 }
+
+// wire.go:
+
+// ProvideConfig loads the configuration
+func ProvideConfig() (config.Config, error) {
+	return config.LoadConfig()
+}
+
+var providerSet = wire.NewSet(
+	ProvideConfig, database.InitDB, repository.NewRepository, usecase.NewUsecase, handlers.NewHandlers, repository.NewTeamRepository, usecase.NewTeamUsecase, handlers.NewTeamHandler, handlers.NewChallengeHandler, usecase.NewChallengeUseCase, repository.NewChallengeRepository, server.NewServer,
+)
