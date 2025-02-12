@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
     <link rel="stylesheet" href="css/bootstrap4-neon-glow.min.css">
+    <link rel="icon" type="image/png" href="../images/favicon.png">
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="css/main.css">
 </head>
@@ -17,7 +18,7 @@
         <div class="container">
             <nav class="navbar navbar-expand-lg navbar-dark">
                 <a href="/" class="text-decoration-none text-white">
-                    <h3 class="bold"><span class="color_danger">Amrita</span><span class="color_white">CTF</span></h3>
+                    <img src="../images/bi0s_white.png" alt="bi0slogo" height="80">
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -39,7 +40,7 @@
         <!-- Timer Section -->
         <div class="text-center my-4">
             <h3 style="color:rgb(139, 17, 84)">Competition Timer</h3>
-            <div id="MyClockDisplay">00:00:00</div>
+            <div id="HackerboardTimer">00:00:00</div>
             <div class="mt-3">
                 <button onclick="startTimer()" class="btn btn-success btn-shadow">Start Timer</button>
                 <button id="resetButton"class="btn btn-success btn-shadow" onclick="resetTimer()">Reset Timer</button>
@@ -109,74 +110,60 @@
 
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-let timerDuration = 2 * 60 * 60; // 2 hours in seconds
-let timerInterval;
-let isPaused = false; // Track pause state
 
-const socket = io(); // Connect to Socket.IO server
 
-function updateTimerDisplay() {
-    let hours = Math.floor(timerDuration / 3600);
-    let minutes = Math.floor((timerDuration % 3600) / 60);
-    let seconds = timerDuration % 60;
 
-    document.getElementById("MyClockDisplay").innerText =
-        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
+    const socket = io(window.location.origin);
+    let timerDuration = 2 * 60 * 60; // 2 hours
+    let timerInterval;
+    let isPaused = false;
 
-function startTimer() {
-    socket.emit("start-timer"); // Notify backend timer started
+    function updateTimerDisplay() {
+        let hours = Math.floor(timerDuration / 3600);
+        let minutes = Math.floor((timerDuration % 3600) / 60);
+        let seconds = timerDuration % 60;
 
-    if (timerInterval) clearInterval(timerInterval); // Clear any existing timer
+        document.getElementById("HackerboardTimer").innerText =
+            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // 🔥 Broadcast time to all clients
+        socket.emit("timer-update", timerDuration);
+    }
 
-    updateTimerDisplay(); // Set display to 2 hours before countdown starts
+    function startTimer() {
+        socket.emit("start-timer"); // Notify backend timer started
 
-    timerInterval = setInterval(() => {
-        if (!isPaused) { // Update time only if not paused
-            if (timerDuration > 0) {
-                timerDuration--;
-                updateTimerDisplay();
-            } else {
-                clearInterval(timerInterval);
+        if (timerInterval) clearInterval(timerInterval);
+
+        updateTimerDisplay();
+
+        timerInterval = setInterval(() => {
+            if (!isPaused) {
+                if (timerDuration > 0) {
+                    timerDuration--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                }
             }
-        }
-    }, 1000);
-}
-function resetTimer() {
-    socket.emit("reset-timer"); // Notify all clients via WebSocket
+        }, 1000);
+    }
 
-    timerDuration = 2 * 60 * 60; // Reset to 2 hours
-    isPaused = false;
-    updateTimerDisplay();
-    startTimer();
-}
+    function resetTimer() {
+        socket.emit("reset-timer"); // 🔥 Notify all clients
 
-socket.on("timer-reset", () => {
-    timerDuration = 2 * 60 * 60; // Reset for all clients
-    isPaused = false;
-    updateTimerDisplay();
-    startTimer();
-});
+        timerDuration = 2 * 60 * 60; // Reset to 2 hours
+        isPaused = false;
+        updateTimerDisplay();
+        startTimer();
+    }
 
+    function toggleFreezeTimer() {
+        isPaused = !isPaused;
+        socket.emit(isPaused ? "freeze-timer" : "resume-timer");
+        document.getElementById("freezeButton").innerText = isPaused ? "Resume Timer" : "Freeze Timer";
+    }
 
-// Toggle pause state on button click
-function toggleFreezeTimer() {
-    isPaused = !isPaused;
-    socket.emit(isPaused ? "freeze-timer" : "resume-timer");
-
-    document.getElementById("freezeButton").innerText = isPaused ? "Resume Timer" : "Freeze Timer";
-}
-
-// Listen for pause/resume events from the backend
-socket.on("timer-frozen", () => {
-    isPaused = true;
-    document.getElementById("freezeButton").innerText = "Resume Timer";
-});
-
-socket.on("timer-resumed", () => {
-    isPaused = false;
-    document.getElementById("freezeButton").innerText = "Freeze Timer";
-});
 
 
         async function fetchChallenges() {

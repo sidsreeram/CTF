@@ -48,13 +48,14 @@ func (s *Server) setupRoutes() {
 	}
 	s.router.SetFuncMap(funcMap)
 
-	// Load templates and static files
-	s.router.LoadHTMLGlob("api/template/*.html")
-	s.router.Static("/css", "api/template/css")
-	s.router.Static("/js", "api/template/js")
-	s.router.Static("/images", "api/template/images")
-	s.router.Static("/fonts", "api/template/fonts")
-	s.router.Static("/admin/css", "api/template/css")
+// Load templates and static files
+s.router.LoadHTMLGlob("/app/template/*.html")  // Corrected path
+s.router.Static("/css", "/app/template/css")
+s.router.Static("/js", "/app/template/js")
+s.router.Static("/images", "/app/template/images")
+s.router.Static("/fonts", "/app/template/fonts")
+s.router.Static("/admin/css", "/app/template/css")
+
 
 	// 📌 Public Routes (No Authentication Required)
 	s.router.GET("/", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "index.html", nil) })

@@ -11,7 +11,7 @@ RUN go mod download
 COPY . . 
 RUN go build -o server ./api/cmd/server/main.go
 # Add this line in your Dockerfile
-COPY template /app/template
+COPY ./template /app/template
 
 # Runtime stage
 FROM alpine:latest
