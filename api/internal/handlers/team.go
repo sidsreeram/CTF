@@ -104,3 +104,4 @@ func (h *TeamHandler) UnblockTeam(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Team unblocked successfully"})
 }
+

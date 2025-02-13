@@ -48,36 +48,42 @@ func (s *Server) setupRoutes() {
 	}
 	s.router.SetFuncMap(funcMap)
 
-// Load templates and static files
-s.router.LoadHTMLGlob("/app/template/*.html")  // Corrected path
-s.router.Static("/css", "/app/template/css")
-s.router.Static("/js", "/app/template/js")
-s.router.Static("/images", "/app/template/images")
-s.router.Static("/fonts", "/app/template/fonts")
-s.router.Static("/admin/css", "/app/template/css")
-
+	// Load templates and static files
+	s.router.LoadHTMLGlob("/app/template/*.html") // Corrected path
+	s.router.Static("/css", "/app/template/css")
+	s.router.Static("/js", "/app/template/js")
+	s.router.Static("/images", "/app/template/images")
+	s.router.Static("/fonts", "/app/template/fonts")
+	s.router.Static("/admin/css", "/app/template/css")
 
 	// 📌 Public Routes (No Authentication Required)
 	s.router.GET("/", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "index.html", nil) })
 	s.router.GET("/register", func(c *gin.Context) { c.HTML(http.StatusOK, "register.html", nil) })
 	s.router.GET("/login", func(c *gin.Context) { c.HTML(http.StatusOK, "login.html", nil) })
-	s.router.GET("/instructions", func(c *gin.Context) { c.HTML(http.StatusOK, "instructions.html", nil) })
-	s.router.GET("/quests", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "quests.html", nil) })
 	s.router.GET("/about", func(c *gin.Context) { c.HTML(http.StatusOK, "about.html", nil) })
-	s.router.GET("/hackerboard", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "hackerboard.html", nil) })
 
 	// API Endpoints - Public
 	s.router.POST("/register", s.teamhandlers.RegisterTeam)
 	s.router.POST("/login", s.teamhandlers.LoginTeam)
 	s.router.GET("/api/scores", s.handlers.GetScores)
 	s.router.GET("/getchallenges", s.challengehandlers.GetChallenges)
+	s.router.GET("/hackerboard", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "hackerboard.html", nil) })
+
 
 	// 📌 **Authenticated Team Routes (Requires Login)**
-	teamRoutes := s.router.Group("/team")
-	teamRoutes.Use(middleware.TeamAuth)
-	{
-		teamRoutes.POST("/verifyflag", s.challengehandlers.SubmitFlag)
-	}
+	// teamRoutes := s.router.Group("/team")
+	// teamRoutes.Static("/css", "/app/template/css")
+	// teamRoutes.Static("/js", "/app/template/js")
+	// teamRoutes.Static("/images", "/app/template/images")
+	// teamRoutes.Static("/fonts", "/app/template/fonts")
+	// teamRoutes.Static("/admin/css", "/app/template/css")
+	// teamRoutes.Use(middleware.TeamAuth)
+	// {
+	// 	teamRoutes.GET("/instructions", func(c *gin.Context) { c.HTML(http.StatusOK, "instructions.html", nil) })
+	// 	teamRoutes.GET("/quests", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "quests.html", nil) })
+    //     teamRoutes.GET("/hackerboard", func(ctx *gin.Context) { ctx.HTML(http.StatusOK, "hackerboard.html", nil) })
+    //     teamRoutes.POST("/verifyflag", s.challengehandlers.SubmitFlag)
+	// }
 
 	// 📌 **Admin Routes (Requires Admin Role)**
 	adminRoutes := s.router.Group("/admin")

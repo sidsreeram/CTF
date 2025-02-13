@@ -21,17 +21,20 @@
             <nav class="navbar navbar-expand-lg navbar-dark">
                 <a href="index.html" class="text-decoration-none text-light">
                     <img src="../images/bi0s_white.png" alt="bi0slogo" height="80">
+                    <img src="../images/asaslogo.png" alt="bi0slogo" height="40 " style="margin-top: 8%;">
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <div class="navbar-nav ml-auto">
-                        <a href="/" class="p-3 text-light bold">Home</a>
-                        <a href="/about" class="p-3 text-light bold">About</a>
-                        <a href="/hackerboard" class="p-3 text-white bold">Hackerboard</a>
-                        <a href="/login" class="p-3 text-light bold">Login</a>
-                        <a href="/register" class="p-3 text-light bold">Register</a>
+                        <a href="/" class="p-3 text-white bold">Home</a>
+                        <a href="/about" class="p-3 text-white bold">About</a>
+                        <a href="/team/hackerboard" class="p-3 text-white bold">Hackerboard</a>
+                        <a href="/team/quests" class="p-3 text-decoration-none text-white bold">Challenges</a>
+                        <a href="/" onclick="logoutUser()" class="p-3 text-decoration-none text-white bold">Logout</a>
+                        <!-- <a href="/login" class="p-3 text-light bold">Login</a>
+                        <a href="/register" class="p-3 text-light bold">Register</a> -->
                     </div>
                 </div>
             </nav>
@@ -83,67 +86,116 @@
     <script>
         const socket = io("http://localhost:3000");
         let scoreChart;
-
+    
         async function fetchScores() {
-    try {
-        const response = await fetch("/api/scores"); // Fetch from new API route
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
-const scores = data.scores; // Access the correct field
-
-        updateTable(scores);
-        updateGraph(scores);
-    } catch (error) {
-        console.error("Error fetching scores:", error);
-    }
-}
-
-function updateTable(data) {
-    let tableBody = document.getElementById("scoreTableBody");
-    tableBody.innerHTML = data.map((entry, index) => `
-        <tr>
-            <th scope="row">${index + 1}</th>
-            <td>${entry.team_name || entry.Name}</td>  <!-- Fix field names -->
-            <td>${entry.score || entry.Score}</td>
-        </tr>
-    `).join("");
-}
-
-
-function updateGraph(data) {
-    let labels = data.map(entry => entry.team_name || entry.Name);
-    let scores = data.map(entry => entry.score || entry.Score);
-
-    let ctx = document.getElementById("scoreChart").getContext("2d");
-
-    if (scoreChart) scoreChart.destroy();
-
-    scoreChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Score",
-                data: scores,
-                backgroundColor: "rgba(75, 192, 192, 0.6)",
-                borderColor: "rgba(75, 192, 192, 1)",
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, title: { display: true, text: "Score" } }
+            try {
+                const response = await fetch("/api/scores");
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+                const scores = data.scores;
+    
+                if (scores.length > 0) {
+                    updateTable(scores);
+                    updateGraph(scores);
+                }
+            } catch (error) {
+                console.error("Error fetching scores:", error);
             }
         }
-    });
+    
+        function updateTable(scores) {
+            const tableBody = document.getElementById("scoreTableBody");
+            tableBody.innerHTML = scores.map((entry, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${entry.team_name || entry.Name}</td>
+                    <td>${entry.score || entry.Score}</td>
+                </tr>
+            `).join("");
+        }
+    
+        function updateGraph(scores) {
+            const labels = scores.map(entry => entry.team_name || entry.Name);
+            const dataScores = scores.map(entry => entry.score || entry.Score);
+    
+            const ctx = document.getElementById("scoreChart").getContext("2d");
+    
+            if (scoreChart) scoreChart.destroy();
+    
+            scoreChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Score",
+                        data: dataScores,
+                        backgroundColor: "rgba(75, 192, 192, 0.6)",
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: "Score" } } }
+                }
+            });
+        }
+    
+        function logoutUser() {
+    fetch("/api/logout", { method: "POST", credentials: "include" })
+        .then(response => response.json())
+        .then(() => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "/";
+        })
+        .catch(error => console.error("Logout failed:", error));
 }
 
+// Prevent back navigation after logout
+function preventBackNavigation() {
+    history.pushState(null, "", location.href);
+    window.onpopstate = function () {
+        history.pushState(null, "", location.href);
+    };
+}
+
+// Disable browser cache to prevent loading old pages after logout
+function disableCache() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        preventBackNavigation();
+    });
+
+    window.onload = function () {
+        preventBackNavigation();
+    };
+
+    window.onpageshow = function (event) {
+        if (event.persisted) {
+            location.reload(); // Force reload to prevent showing cached page
+        }
+    };
+}
+
+// Call the function on page load
+disableCache();
+    
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+    
         document.addEventListener("DOMContentLoaded", () => {
             fetchScores();
-            socket.on("scoreUpdated", fetchScores);
+            socket.on("update-score", fetchScores); // Real-time updates
         });
     </script>
-</body>
+    </body>
 </html>

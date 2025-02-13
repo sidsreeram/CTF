@@ -17,10 +17,7 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 
-
 <body class="imgloaded">
-
-    
 
     <div id="main">
         <div class="glitch">
@@ -36,18 +33,18 @@
                         <div class="navbar-nav">
                             <a href="/" class="pl-md-0 p-3 text-decoration-none text-light">
                                 <img src="../images/bi0s_white.png" alt="bi0slogo" height="80">
+                                <img src="../images/asaslogo.png" alt="bi0slogo" height="40 " style="margin-top: 8%;">
                             </a>
                         </div>
                         <div class="navbar-nav ml-auto">
                             <a href="/" class="p-3 text-decoration-none text-white bold">Home</a>
                             <a href="/about" class="p-3 text-decoration-none text-white bold">About</a>
-                            <a href="/hackerboard" class="p-3 text-decoration-none text-white bold">Hackerboard</a>
+                            <!-- <a href="/hackerboard" class="p-3 text-decoration-none text-white bold">Hackerboard</a> -->
                             <a href="/login" class="p-3 text-decoration-none text-white bold">Login</a>
                             <a href="/register" class="p-3 text-decoration-none text-white bold">Register</a>
                         </div>
                     </div>
                 </nav>
-
             </div>
         </div>
 
@@ -73,11 +70,29 @@
         </div>
     </div>
 
+    <script>
+        // Prevent back navigation after logout
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+
+        // Handle logout link click
+        document.getElementById('logout').addEventListener('click', function(event) {
+            event.preventDefault();
+
+            // Perform logout operations here (e.g., clear session, cookies, etc.)
+            // Example: Clear a session token from localStorage
+            localStorage.removeItem('authToken'); // Replace 'authToken' with your actual token key
+
+            // Redirect to the home page
+            window.location.href = '/';
+        });
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="js/preloader.js"></script>
 </body>
-
 </html>
